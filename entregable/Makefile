@@ -15,10 +15,12 @@ OBJ = ConcurrentHashMap.o
 all: $(BIN)
 
 $(BIN): ListaAtomica.hpp
+mitest: ListaAtomica.hpp test.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test.cpp  $(LDLIBS)
 
 test-2: $(OBJ) test-2.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-2.cpp $(OBJ) $(LDLIBS)
-	
+
 test-2-run: test-2
 	awk -f corpus.awk corpus | sort >corpus-post
 	./test-2 | sort | diff -u - corpus-post
