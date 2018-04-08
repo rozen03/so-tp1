@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <string>
+#include "ListaAtomica.hpp"
 using namespace std;
 class ConcurrentHashMap {
 private:
