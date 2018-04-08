@@ -1,6 +1,6 @@
 .POSIX:
 .SUFFIXES:
-.SUFFIXES: .o .cpp
+.SUFFIXES: .o .cpp .hpp
 
 CXX = g++
 CXXFLAGS = -std=c++11
@@ -17,6 +17,10 @@ all: $(BIN)
 $(BIN): ListaAtomica.hpp
 mitest: ListaAtomica.hpp test.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test.cpp  $(LDLIBS)
+
+#no se si lo de -nostartfiles esta bien, pero al menos asi compiló lpm!
+ConcurrentHashMap.o: ListaAtomica.hpp ConcurrentHashMap.hpp
+	$(CXX) $(CXXFLAGS)  -nostartfiles $(LDFLAGS) -o $@ $^  $(LDLIBS)
 
 test-2: $(OBJ) test-2.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-2.cpp $(OBJ) $(LDLIBS)

@@ -2,9 +2,10 @@
 #define CONCURRENT_HASH_MAP_H__
 
 #include <atomic>
-
-
+#include <string>
+using namespace std;
 class ConcurrentHashMap {
+private:
 
 public:
 	// Constructor. Crea la tabla. La misma tendrá 26 entradas (una por cada letra del abecedario 1 ).
