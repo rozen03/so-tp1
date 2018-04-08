@@ -15,7 +15,7 @@ OBJ = ConcurrentHashMap.o
 all: $(BIN)
 
 $(BIN): ListaAtomica.hpp
-mitest: ListaAtomica.hpp test.cpp
+mitest: ListaAtomica.hpp ConcurrentHashMap.hpp test.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test.cpp  $(LDLIBS)
 
 #no se si lo de -nostartfiles esta bien, pero al menos asi compiló lpm!
