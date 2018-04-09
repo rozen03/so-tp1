@@ -5,6 +5,7 @@
 #include <string>
 #include "ListaAtomica.hpp"
 #include <iostream>
+#include <mutex>
 using namespace std;
 class ConcurrentHashMap {
 private:
@@ -14,6 +15,10 @@ private:
 		int _value;
 	};
  Lista<Nodo> mapa [26];
+ mutex mutexes[26]; // No encontre mejor nombre para el array este
+int orden(string palabra ){
+	return palabra.at(0) - 'a';
+}
 public:
 	// Constructor. Crea la tabla. La misma tendrá 26 entradas (una por cada letra del abecedario 1 ).
 	// Cada entrada consta de una lista de pares (string, entero). La función de hash será la primer letra del string.
