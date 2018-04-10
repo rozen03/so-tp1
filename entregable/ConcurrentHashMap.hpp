@@ -16,18 +16,35 @@ private:
 	};
  Lista<Nodo> mapa [26];
  mutex mutexes[26]; // No encontre mejor nombre para el array este
-int orden(string palabra ){
-	return palabra.at(0) - 'a';
+int orden(string key ){
+	return key.at(0) - 'a';
 }
 public:
-	// Constructor. Crea la tabla. La misma tendrá 26 entradas (una por cada letra del abecedario 1 ).
+	// Constructor. Crea la tabla. La misma tendrá 26 en tradas (una por cada letra del abecedario 1 ).
 	// Cada entrada consta de una lista de pares (string, entero). La función de hash será la primer letra del string.
 	ConcurrentHashMap(){} //cambiar esto por ; si vamos a implementarlo a parte
 
 	// Si key existe, incrementa su valor, si no existe, crea el par (key, 1).
 	// Se debe garantizar que sólo haya contención en caso de colisión de hash.
 	// Esto es, deberá haber locking a nivel de cada elemento del array.
-	void addAndInc(string key);
+	void addAndInc(string key){
+		int i = orden(key);
+		mutexes[i].lock();
+		auto it =mapa[i].CrearIt();
+		bool existe=false;
+		while(it.HaySiguiente() && !existe){
+			if (it.Siguiente()->_key==key){
+				it.Siguiente()->_value++;
+				existe=true;
+			}else{
+				it.Avanzar();
+			}
+		}
+		if (!existe){
+			mapa[i].push_front(key);
+		}
+		mutexes[i].unlock();
+	}
 
 	// true si y solo si el par (key, x) pertenece al hash map para algún x.
 	// Esta operación deberá ser wait-free.
