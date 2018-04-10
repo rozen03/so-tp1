@@ -14,12 +14,24 @@ private:
 		string _key;
 		int _value;
 	};
- Lista<Nodo> mapa [26];
+ Lista<Nodo*> mapa [26];
  mutex mutexes[26]; // No encontre mejor nombre para el array este
 int orden(string key ){
 	return key.at(0) - 'a';
 }
 public:
+	void print(){
+		for(int i=0; i<26;i++){
+			auto it =mapa[i].CrearIt();
+			cout<<i<<": ";
+			while(it.HaySiguiente()){
+				auto cosa=it.Siguiente();
+				cout<<cosa->_key<<","<<cosa->_value<<",";
+				it.Avanzar();
+			}
+			cout<<endl;
+		}
+	}
 	// Constructor. Crea la tabla. La misma tendrá 26 en tradas (una por cada letra del abecedario 1 ).
 	// Cada entrada consta de una lista de pares (string, entero). La función de hash será la primer letra del string.
 	ConcurrentHashMap(){} //cambiar esto por ; si vamos a implementarlo a parte
@@ -33,15 +45,17 @@ public:
 		auto it =mapa[i].CrearIt();
 		bool existe=false;
 		while(it.HaySiguiente() && !existe){
-			if (it.Siguiente()->_key==key){
-				it.Siguiente()->_value++;
+			auto nodo = it.Siguiente();
+			if (nodo->_key==key){
+				nodo->_value=nodo->_value+1 ;
+				// cout<<"coso"<<nodo->_key<<","<<nodo->_value<<endl;
 				existe=true;
 			}else{
 				it.Avanzar();
 			}
 		}
 		if (!existe){
-			mapa[i].push_front(key);
+			mapa[i].push_front(new Nodo(key));
 		}
 		mutexes[i].unlock();
 	}
