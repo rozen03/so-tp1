@@ -11,25 +11,46 @@
 using namespace std;
 
 typedef pair<string, unsigned int> par;
+
+struct Busqueda {
+	Busqueda(Lista<par>* mapa) {
+		contador.store(0);
+		_mapa = mapa;
+
+	}
+	Lista<par>* _mapa;
+	atomic<int> contador;
+};
+
+void * buscador(void* data){
+	Busqueda* busqueda = (Busqueda*) data;
+	par max("", -1);
+	while (true) {
+		int i = busqueda->contador++;
+		cout << i << endl;
+		if (i >= 26) break;
+		Lista<par> it1 = busqueda->_mapa[i];
+		cout << "it2" << endl;
+		auto it = it1.CrearIt();
+		cout << "it" << endl;
+		while (it.HaySiguiente()) {
+			if (it.Siguiente().second > max.second) {
+				max = it.Siguiente();
+			}
+			it.Avanzar();
+		}	
+	}
+	return (void*)&max;
+}
+
 class ConcurrentHashMap {
 private:
-
- 	struct Busqueda {
-		Busqueda(ConcurrentHashMap* nuevoMapa){
-			contador.store(0);
-			mapa=nuevoMapa;
-
-		}
-		ConcurrentHashMap* mapa;
-		atomic<int> contador;
-	};
 
 	Lista<par> _mapa[26];
 	mutex mutexes[26]; // No encontre mejor nombre para el array este
 	int orden(string key) {
 		return key.at(0) - 'a';
 	}
-
 
 public:
 
@@ -74,40 +95,16 @@ public:
 		return it.HaySiguiente();
 	}
 
-	static void * buscador(void* data){
-		Busqueda* busqueda = (Busqueda*) data;
-		par max("", -1);
-		while (true) {
-			int i = busqueda->contador++;
-			cout << i << endl;
-			if (i >= 26) break;
-			auto it1 = busqueda->mapa;
-			cout << "it1" << endl;
-			auto it2 = it1 ->_mapa[i];
-			cout << "it2" << endl;
-			auto it = it2.CrearIt();
-			cout << "it" << endl;
-			while (it.HaySiguiente()) {
-				if (it.Siguiente().second > max.second) {
-					max = it.Siguiente();
-				}
-				it.Avanzar();
-			}	
-		}
-		return (void*)&max;
-	}
-
-typedef void * (*THREADFUNCPTR)(void *);
 	// Devuelve el par (k, m) tal que k es la clave con máxima cantidad de apariciones y m es ese valor.
 	// No puede ser concurrente con addAndInc, sı́ con member, y tiene que ser implementada con concurrencia interna.
 	// El parámetro nt indica la cantidad de threads a utilizar.
 	// Los threads procesarán una fila del array. Si no tienen filas por procesar terminarán su ejecución.
 	pair<string, unsigned int>maximum(unsigned int nt){
-		Busqueda* busqueda = new Busqueda(this);
+		Busqueda* busqueda = new Busqueda(this->_mapa);
 		pthread_t thread[nt];
 		long long unsigned int tid;
 		for (tid = 0; tid < nt; ++tid){
-			pthread_create(&thread[tid], NULL,(THREADFUNCPTR)&ConcurrentHashMap::buscador,  busqueda);
+			pthread_create(&thread[tid], NULL, buscador,  busqueda);
 		}
 		par* max_global = new pair<string, unsigned int>("", -1);
 		void* max_thread;
