@@ -48,7 +48,6 @@ public:
 			auto nodo = it.Siguiente();
 			if (nodo->_key==key){
 				nodo->_value++;
-				// cout<<"coso"<<nodo->_key<<","<<nodo->_value<<endl;
 				existe=true;
 			}else{
 				it.Avanzar();
@@ -62,7 +61,20 @@ public:
 
 	// true si y solo si el par (key, x) pertenece al hash map para algún x.
 	// Esta operación deberá ser wait-free.
-	bool member(string key);
+	bool member(string key){
+		int i = orden(key);
+		auto it =mapa[i].CrearIt();
+		bool existe=false;
+		while(it.HaySiguiente() && !existe){
+			auto nodo = it.Siguiente();
+			if (nodo->_key==key){
+				existe=true;
+			}else{
+				it.Avanzar();
+			}
+		}
+		return existe;
+	}
 
 	// Devuelve el par (k, m) tal que k es la clave con máxima cantidad de apariciones y m es ese valor.
 	// No puede ser concurrente con addAndInc, sı́ con member, y tiene que ser implementada con concurrencia interna.
