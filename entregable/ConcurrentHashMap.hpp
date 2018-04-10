@@ -16,10 +16,11 @@ struct Busqueda {
 	Busqueda(Lista<par>* mapa) {
 		contador.store(0);
 		_mapa = mapa;
-
 	}
 	Lista<par>* _mapa;
 	atomic<int> contador;
+	par max;
+	mutex mtx_max;
 };
 
 void * buscador(void* data){
@@ -29,10 +30,7 @@ void * buscador(void* data){
 		int i = busqueda->contador++;
 		cout << i << endl;
 		if (i >= 26) break;
-		Lista<par> it1 = busqueda->_mapa[i];
-		cout << "it2" << endl;
-		auto it = it1.CrearIt();
-		cout << "it" << endl;
+		auto it = busqueda->_mapa[i].CrearIt();
 		while (it.HaySiguiente()) {
 			if (it.Siguiente().second > max.second) {
 				max = it.Siguiente();
@@ -40,7 +38,13 @@ void * buscador(void* data){
 			it.Avanzar();
 		}	
 	}
-	return (void*)&max;
+
+	busqueda->mtx_max.lock();
+	if (max.second > busqueda->max.second) 
+		busqueda->max = max;
+	busqueda->mtx_max.unlock();
+
+	return NULL;
 }
 
 class ConcurrentHashMap {
@@ -106,15 +110,12 @@ public:
 		for (tid = 0; tid < nt; ++tid){
 			pthread_create(&thread[tid], NULL, buscador,  busqueda);
 		}
-		par* max_global = new pair<string, unsigned int>("", -1);
 		void* max_thread;
 		for (tid = 0; tid < nt; ++tid){
-			pthread_join(thread[tid], &max_thread);
-			if (((par*) max_thread)->second > max_global->second) {
-				max_global = (par*)max_thread;
-			}
+			pthread_join(thread[tid], NULL);
+			
 		}
-		return (*max_global);
+		return busqueda->max;
 	}
 };
 
