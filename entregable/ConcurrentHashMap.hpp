@@ -6,6 +6,7 @@
 #include "ListaAtomica.hpp"
 #include <iostream>
 #include <mutex>
+#include<pthread.h>
 
 using namespace std;
 
@@ -17,14 +18,19 @@ private:
 		string _key;
 		long unsigned int _value;
 	};
-
+ 	struct Busqueda {
+		Busqueda():maximo(nullptr){
+			contador.store(0);
+		}
+		Par* maximo;
+		atomic<int> contador;
+	};
 	Lista<Par> mapa[26];
-
 	mutex mutexes[26]; // No encontre mejor nombre para el array este
-
 	int orden(string key) {
 		return key.at(0) - 'a';
 	}
+
 
 public:
 
@@ -69,11 +75,36 @@ public:
 		return it.HaySiguiente();
 	}
 
+	void * buscador(void* data){
+		Busqueda* busqueda = (Busqueda*) data;
+		int i = busqueda->contador++;
+		cout<<i<<","<<busqueda->contador.load()<<endl;
+		while(i<26){
+			cout<<i<<endl;
+			i = busqueda->contador++;
+		}
+
+		return NULL;
+	}
+typedef void * (*THREADFUNCPTR)(void *);
 	// Devuelve el par (k, m) tal que k es la clave con máxima cantidad de apariciones y m es ese valor.
 	// No puede ser concurrente con addAndInc, sı́ con member, y tiene que ser implementada con concurrencia interna.
 	// El parámetro nt indica la cantidad de threads a utilizar.
 	// Los threads procesarán una fila del array. Si no tienen filas por procesar terminarán su ejecución.
-	pair<string, unsigned int>maximum(unsigned int nt);
+	pair<string, unsigned int>maximum(unsigned int nt){
+		Busqueda* busqueda = new Busqueda();
+		busqueda->contador.store(0);
+		cout<<"contador"<<busqueda->contador++<<endl;
+		pthread_t thread[nt];
+		long long unsigned int tid;
+		for (tid = 0; tid < nt; ++tid){
+			pthread_create(&thread[tid], NULL,(THREADFUNCPTR)&ConcurrentHashMap::buscador,  busqueda);
+		}
+		for (tid = 0; tid < nt; ++tid){
+			pthread_join(thread[tid], NULL);
+		}
+		return make_pair ("hola",20);
+	}
 
 };
 

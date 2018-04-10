@@ -3,6 +3,7 @@
 #include "ConcurrentHashMap.hpp"
 #include<pthread.h>
 #include<stdio.h>
+#include <atomic>
 using namespace std;
 void testLista(){
   Lista<int> lista;
@@ -51,15 +52,25 @@ void testaddincMultithread(){
   pthread_t thread[CANT_THREADS];
   long long unsigned int tid;
   for (tid = 0; tid < CANT_THREADS; ++tid){
-    pthread_create(&thread[tid], NULL, agregarHola,  mapa);
+	pthread_create(&thread[tid], NULL, agregarHola,  mapa);
   }
 
   for (tid = 0; tid < CANT_THREADS; ++tid){
-    pthread_join(thread[tid], NULL);
+	pthread_join(thread[tid], NULL);
   }
  mapa->print();
 }
+void atomictest(){
+atomic<int> a;
+a.store(0);
+int b = ++a;
+cout<<b<<endl;
+}
+void testMaximum(){
+	ConcurrentHashMap mapa;
+	mapa.maximum(1);
+}
 int main(void) {
-testaddincMultithread();
+	testMaximum();
 
 }
