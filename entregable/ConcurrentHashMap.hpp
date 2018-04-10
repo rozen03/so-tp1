@@ -6,32 +6,41 @@
 #include "ListaAtomica.hpp"
 #include <iostream>
 #include <mutex>
+
 using namespace std;
+
 class ConcurrentHashMap {
 private:
-	struct Nodo {
-		Nodo(string key) : _key(key), _value(0) {}
+
+	struct Par {
+		Par(string key) : _key(key), _value(1) {}
 		string _key;
 		long unsigned int _value;
 	};
- Lista<Nodo*> mapa [26];
- mutex mutexes[26]; // No encontre mejor nombre para el array este
-int orden(string key ){
-	return key.at(0) - 'a';
-}
+
+	Lista<Par> mapa[26];
+
+	mutex mutexes[26]; // No encontre mejor nombre para el array este
+
+	int orden(string key) {
+		return key.at(0) - 'a';
+	}
+
 public:
+
 	void print(){
-		for(int i=0; i<26;i++){
-			auto it =mapa[i].CrearIt();
-			cout<<i<<": ";
-			while(it.HaySiguiente()){
-				auto cosa=it.Siguiente();
-				cout<<cosa->_key<<","<<cosa->_value<<",";
+		for(int i = 0; i < 26; i++) {
+			auto it = mapa[i].CrearIt();
+			cout << i << ": ";
+			while(it.HaySiguiente()) {
+				Par elemento = it.Siguiente();
+				cout << elemento._key << "," << elemento._value << ",";
 				it.Avanzar();
 			}
-			cout<<endl;
+			cout << endl;
 		}
 	}
+
 	// Constructor. Crea la tabla. La misma tendrá 26 en tradas (una por cada letra del abecedario 1 ).
 	// Cada entrada consta de una lista de pares (string, entero). La función de hash será la primer letra del string.
 	ConcurrentHashMap(){} //cambiar esto por ; si vamos a implementarlo a parte
@@ -42,20 +51,12 @@ public:
 	void addAndInc(string key){
 		int i = orden(key);
 		mutexes[i].lock();
-		auto it =mapa[i].CrearIt();
-		bool existe=false;
-		while(it.HaySiguiente() && !existe){
-			auto nodo = it.Siguiente();
-			if (nodo->_key==key){
-				nodo->_value++;
-				existe=true;
-			}else{
-				it.Avanzar();
-			}
-		}
-		if (!existe){
-			mapa[i].push_front(new Nodo(key));
-		}
+		auto it = mapa[i].CrearIt();
+		while(it.HaySiguiente() && it.Siguiente()._key != key) it.Avanzar();
+		if (it.HaySiguiente()) // key ya esta definido
+			it.Siguiente()._value++;
+		else // key no existe, insertamos (key, 1)
+			mapa[i].push_front(Par(key));
 		mutexes[i].unlock();
 	}
 
@@ -63,17 +64,9 @@ public:
 	// Esta operación deberá ser wait-free.
 	bool member(string key){
 		int i = orden(key);
-		auto it =mapa[i].CrearIt();
-		bool existe=false;
-		while(it.HaySiguiente() && !existe){
-			auto nodo = it.Siguiente();
-			if (nodo->_key==key){
-				existe=true;
-			}else{
-				it.Avanzar();
-			}
-		}
-		return existe;
+		auto it = mapa[i].CrearIt();
+		while(it.HaySiguiente() && it.Siguiente()._key != key) it.Avanzar();
+		return it.HaySiguiente();
 	}
 
 	// Devuelve el par (k, m) tal que k es la clave con máxima cantidad de apariciones y m es ese valor.
