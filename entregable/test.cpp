@@ -68,6 +68,7 @@ cout<<b<<endl;
 }
 void testMaximum(){
 	ConcurrentHashMap mapa;
+  mapa.addAndInc("hola");
 	mapa.maximum(1);
 }
 int main(void) {

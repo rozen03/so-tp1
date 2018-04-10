@@ -10,22 +10,21 @@
 
 using namespace std;
 
+typedef pair<string, unsigned int> par;
 class ConcurrentHashMap {
 private:
 
-	struct Par {
-		Par(string key) : _key(key), _value(1) {}
-		string _key;
-		long unsigned int _value;
-	};
  	struct Busqueda {
-		Busqueda():maximo(nullptr){
+		Busqueda(ConcurrentHashMap* nuevoMapa){
 			contador.store(0);
+			mapa=nuevoMapa;
+
 		}
-		Par* maximo;
+		ConcurrentHashMap* mapa;
 		atomic<int> contador;
 	};
-	Lista<Par> mapa[26];
+
+	Lista<par> _mapa[26];
 	mutex mutexes[26]; // No encontre mejor nombre para el array este
 	int orden(string key) {
 		return key.at(0) - 'a';
@@ -36,11 +35,11 @@ public:
 
 	void print(){
 		for(int i = 0; i < 26; i++) {
-			auto it = mapa[i].CrearIt();
+			auto it = _mapa[i].CrearIt();
 			cout << i << ": ";
 			while(it.HaySiguiente()) {
-				Par elemento = it.Siguiente();
-				cout << elemento._key << "," << elemento._value << ",";
+				par elemento = it.Siguiente();
+				cout << elemento.first << "," << elemento.second << ",";
 				it.Avanzar();
 			}
 			cout << endl;
@@ -57,12 +56,12 @@ public:
 	void addAndInc(string key){
 		int i = orden(key);
 		mutexes[i].lock();
-		auto it = mapa[i].CrearIt();
-		while(it.HaySiguiente() && it.Siguiente()._key != key) it.Avanzar();
+		auto it = _mapa[i].CrearIt();
+		while(it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
 		if (it.HaySiguiente()) // key ya esta definido
-			it.Siguiente()._value++;
+			it.Siguiente().second++;
 		else // key no existe, insertamos (key, 1)
-			mapa[i].push_front(Par(key));
+			_mapa[i].push_front(make_pair(key, 1));
 		mutexes[i].unlock();
 	}
 
@@ -70,42 +69,56 @@ public:
 	// Esta operación deberá ser wait-free.
 	bool member(string key){
 		int i = orden(key);
-		auto it = mapa[i].CrearIt();
-		while(it.HaySiguiente() && it.Siguiente()._key != key) it.Avanzar();
+		auto it = _mapa[i].CrearIt();
+		while(it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
 		return it.HaySiguiente();
 	}
 
-	void * buscador(void* data){
+	static void * buscador(void* data){
 		Busqueda* busqueda = (Busqueda*) data;
-		int i = busqueda->contador++;
-		cout<<i<<","<<busqueda->contador.load()<<endl;
-		while(i<26){
-			cout<<i<<endl;
-			i = busqueda->contador++;
+		par max("", -1);
+		while (true) {
+			int i = busqueda->contador++;
+			cout << i << endl;
+			if (i >= 26) break;
+			auto it1 = busqueda->mapa;
+			cout << "it1" << endl;
+			auto it2 = it1 ->_mapa[i];
+			cout << "it2" << endl;
+			auto it = it2.CrearIt();
+			cout << "it" << endl;
+			while (it.HaySiguiente()) {
+				if (it.Siguiente().second > max.second) {
+					max = it.Siguiente();
+				}
+				it.Avanzar();
+			}	
 		}
-
-		return NULL;
+		return (void*)&max;
 	}
+
 typedef void * (*THREADFUNCPTR)(void *);
 	// Devuelve el par (k, m) tal que k es la clave con máxima cantidad de apariciones y m es ese valor.
 	// No puede ser concurrente con addAndInc, sı́ con member, y tiene que ser implementada con concurrencia interna.
 	// El parámetro nt indica la cantidad de threads a utilizar.
 	// Los threads procesarán una fila del array. Si no tienen filas por procesar terminarán su ejecución.
 	pair<string, unsigned int>maximum(unsigned int nt){
-		Busqueda* busqueda = new Busqueda();
-		busqueda->contador.store(0);
-		cout<<"contador"<<busqueda->contador++<<endl;
+		Busqueda* busqueda = new Busqueda(this);
 		pthread_t thread[nt];
 		long long unsigned int tid;
 		for (tid = 0; tid < nt; ++tid){
 			pthread_create(&thread[tid], NULL,(THREADFUNCPTR)&ConcurrentHashMap::buscador,  busqueda);
 		}
+		par* max_global = new pair<string, unsigned int>("", -1);
+		void* max_thread;
 		for (tid = 0; tid < nt; ++tid){
-			pthread_join(thread[tid], NULL);
+			pthread_join(thread[tid], &max_thread);
+			if (((par*) max_thread)->second > max_global->second) {
+				max_global = (par*)max_thread;
+			}
 		}
-		return make_pair ("hola",20);
+		return (*max_global);
 	}
-
 };
 
 #endif /* CONCURRENT_HASH_MAP_H__ */
