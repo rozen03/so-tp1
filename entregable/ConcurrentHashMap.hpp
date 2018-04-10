@@ -12,7 +12,7 @@ private:
 	struct Nodo {
 		Nodo(string key) : _key(key), _value(0) {}
 		string _key;
-		int _value;
+		long unsigned int _value;
 	};
  Lista<Nodo*> mapa [26];
  mutex mutexes[26]; // No encontre mejor nombre para el array este
@@ -47,7 +47,7 @@ public:
 		while(it.HaySiguiente() && !existe){
 			auto nodo = it.Siguiente();
 			if (nodo->_key==key){
-				nodo->_value=nodo->_value+1 ;
+				nodo->_value++;
 				// cout<<"coso"<<nodo->_key<<","<<nodo->_value<<endl;
 				existe=true;
 			}else{
