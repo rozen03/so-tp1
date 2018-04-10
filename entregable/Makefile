@@ -54,3 +54,4 @@ test-5-run: test-5
 clean:
 	rm -f $(BIN) $(OBJ)
 	rm -f corpus-*
+	rm -f mitest
