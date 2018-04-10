@@ -1,6 +1,8 @@
 #include <iostream>
 #include "ListaAtomica.hpp"
 #include "ConcurrentHashMap.hpp"
+#include<pthread.h>
+#include<stdio.h>
 using namespace std;
 void testLista(){
   Lista<int> lista;
@@ -34,7 +36,30 @@ void testaddInc(){
   mapa.addAndInc("chau");
   mapa.print();
 }
+
+
+void * agregarHola(void* data){
+  cout<<"empecé"<<endl;
+  ConcurrentHashMap * mapa = (ConcurrentHashMap *)data;
+	mapa->addAndInc("hola");
+  cout<<"terminé"<<endl;
+	return NULL;
+}
+void testaddincMultithread(){
+  ConcurrentHashMap* mapa = new ConcurrentHashMap();
+  long long unsigned int CANT_THREADS =9999;
+  pthread_t thread[CANT_THREADS];
+  long long unsigned int tid;
+  for (tid = 0; tid < CANT_THREADS; ++tid){
+    pthread_create(&thread[tid], NULL, agregarHola,  mapa);
+  }
+
+  for (tid = 0; tid < CANT_THREADS; ++tid){
+    pthread_join(thread[tid], NULL);
+  }
+ mapa->print();
+}
 int main(void) {
-testaddInc();
+testaddincMultithread();
 
 }
