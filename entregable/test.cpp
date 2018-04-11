@@ -71,7 +71,13 @@ void testMaximum(){
   mapa.addAndInc("hola");
 	mapa.maximum(1);
 }
+
+void testCountWords() {
+  ConcurrentHashMap h(count_words("corpus"));
+  h.print();
+}
+
 int main(void) {
-	testMaximum();
+	testCountWords();
 
 }

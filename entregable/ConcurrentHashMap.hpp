@@ -6,7 +6,8 @@
 #include "ListaAtomica.hpp"
 #include <iostream>
 #include <mutex>
-#include<pthread.h>
+#include <pthread.h>
+#include <fstream>
 
 using namespace std;
 
@@ -17,7 +18,7 @@ struct Busqueda {
 		contador.store(0);
 		_mapa = mapa;
 	}
-	Lista<par>* _mapa;
+	Lista<par>* _mapa;	
 	atomic<int> contador;
 	par max;
 	mutex mtx_max;
@@ -48,7 +49,7 @@ void * buscador(void* data){
 }
 
 class ConcurrentHashMap {
-private:
+public:
 
 	Lista<par> _mapa[26];
 	mutex mutexes[26]; // No encontre mejor nombre para el array este
@@ -56,24 +57,26 @@ private:
 		return key.at(0) - 'a';
 	}
 
-public:
-
 	void print(){
 		for(int i = 0; i < 26; i++) {
 			auto it = _mapa[i].CrearIt();
 			cout << i << ": ";
 			while(it.HaySiguiente()) {
 				par elemento = it.Siguiente();
-				cout << elemento.first << "," << elemento.second << ",";
+				cout << "(" << elemento.first << "," << elemento.second << "), ";
 				it.Avanzar();
 			}
-			cout << endl;
+			cout << endl << endl;
 		}
 	}
 
 	// Constructor. Crea la tabla. La misma tendrá 26 en tradas (una por cada letra del abecedario 1 ).
 	// Cada entrada consta de una lista de pares (string, entero). La función de hash será la primer letra del string.
 	ConcurrentHashMap(){} //cambiar esto por ; si vamos a implementarlo a parte
+
+	ConcurrentHashMap(const ConcurrentHashMap& mapa) {
+
+	}
 
 	// Si key existe, incrementa su valor, si no existe, crea el par (key, 1).
 	// Se debe garantizar que sólo haya contención en caso de colisión de hash.
@@ -93,8 +96,8 @@ public:
 	// true si y solo si el par (key, x) pertenece al hash map para algún x.
 	// Esta operación deberá ser wait-free.
 	bool member(string key){
-		int i = orden(key);
-		auto it = _mapa[i].CrearIt();
+			int i = orden(key);
+			auto it = _mapa[i].CrearIt();
 		while(it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
 		return it.HaySiguiente();
 	}
@@ -118,5 +121,16 @@ public:
 		return busqueda->max;
 	}
 };
+
+ConcurrentHashMap count_words(string arch) {
+	ifstream ifs(arch);
+	ConcurrentHashMap mapa;
+	string key;
+	while (!ifs.eof()) {
+		ifs >> key;
+		mapa.addAndInc(key);
+	}
+	return mapa;
+}
 
 #endif /* CONCURRENT_HASH_MAP_H__ */
