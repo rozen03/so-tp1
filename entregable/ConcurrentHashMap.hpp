@@ -8,7 +8,7 @@
 #include <mutex>
 #include <pthread.h>
 #include <fstream>
-
+#include <list>
 using namespace std;
 
 typedef pair<string, unsigned int> par;
@@ -130,19 +130,48 @@ public:
 		return busqueda->max;
 	}
 };
-
-ConcurrentHashMap count_words(string arch) {
+struct WrapperCountWords{
+ConcurrentHashMap* mapa;
+string arch;
+};
+void meterEnMapa(ConcurrentHashMap* mapa,string arch){
 	ifstream ifs(arch);
-	ConcurrentHashMap mapa;
 	string key;
 	while (!ifs.eof()) {
 		ifs >> key;
-		mapa.addAndInc(key);
+		mapa->addAndInc(key);
 	}
+}
+void * threadCount_words1(void * data){
+	WrapperCountWords* wrap = (WrapperCountWords*)data;
+	meterEnMapa(wrap->mapa,wrap->arch);
+}
+
+ConcurrentHashMap count_words(string arch) {
+	ConcurrentHashMap mapa;
+	meterEnMapa(&mapa,arch);
 	return mapa;
 }
-// ConcurrentHashMap count_words(list<string>archs){
-	// int nt =archs.size();
-	// pthread_t thread[nt];
-// }
+
+ConcurrentHashMap count_words(list<string>archs){
+	int nt =archs.size();
+	pthread_t thread[nt];
+	ConcurrentHashMap *mapa;
+	int tid=0;
+	for (string arch : archs) {
+		WrapperCountWords* wrap;
+		wrap->arch=arch;
+		wrap->mapa=mapa;
+		pthread_create(&thread[tid], NULL, threadCount_words1,  wrap);
+		tid++;
+	}
+	for (tid = 0; tid < nt; ++tid){
+		pthread_join(thread[tid], NULL);
+	}
+	mapa->print();
+
+}
+ConcurrentHashMap count_words(unsigned int n,list<string>archs){
+
+}
 #endif /* CONCURRENT_HASH_MAP_H__ */
