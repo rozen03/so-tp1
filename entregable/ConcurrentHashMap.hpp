@@ -127,5 +127,8 @@ public:
 		return busqueda->max;
 	}
 };
-
+ConcurrentHashMap count_words(list<string>archs){
+	int nt =archs.size();
+	pthread_t thread[nt];
+}
 #endif /* CONCURRENT_HASH_MAP_H__ */
