@@ -77,7 +77,13 @@ void testMaximum(){
   	auto res = mapa.maximum(32);
 	cout<<res.first<<" "<<res.second<<endl;
 }
+
+void testCountWords() {
+  ConcurrentHashMap h(count_words("corpus"));
+  h.print();
+}
+
 int main(void) {
-	testMaximum();
+	testCountWords();
 
 }
