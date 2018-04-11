@@ -26,22 +26,24 @@ struct Busqueda {
 
 void * buscador(void* data){
 	Busqueda* busqueda = (Busqueda*) data;
-	par max("", -1);
+	par max("", 0);
 	while (true) {
 		int i = busqueda->contador++;
-		cout << i << endl;
+		// cout << i << endl;
 		if (i >= 26) break;
 		auto it = busqueda->_mapa[i].CrearIt();
 		while (it.HaySiguiente()) {
 			if (it.Siguiente().second > max.second) {
+				// cout << "ejejejeojojojo" << endl;
 				max = it.Siguiente();
+				// cout<<max.first<<","<<max.second<<endl;
 			}
 			it.Avanzar();
-		}	
+		}
 	}
 
 	busqueda->mtx_max.lock();
-	if (max.second > busqueda->max.second) 
+	if (max.second > busqueda->max.second)
 		busqueda->max = max;
 	busqueda->mtx_max.unlock();
 
@@ -107,6 +109,10 @@ public:
 	// El parámetro nt indica la cantidad de threads a utilizar.
 	// Los threads procesarán una fila del array. Si no tienen filas por procesar terminarán su ejecución.
 	pair<string, unsigned int>maximum(unsigned int nt){
+		for (size_t i = 0; i < 26; i++) {
+			/* code */
+			mutexes[i].lock();
+		}
 		Busqueda* busqueda = new Busqueda(this->_mapa);
 		pthread_t thread[nt];
 		long long unsigned int tid;
@@ -116,7 +122,10 @@ public:
 		void* max_thread;
 		for (tid = 0; tid < nt; ++tid){
 			pthread_join(thread[tid], NULL);
-			
+		}
+		for (size_t i = 0; i < 26; i++) {
+			/* code */
+			mutexes[i].unlock();
 		}
 		return busqueda->max;
 	}
