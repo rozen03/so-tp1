@@ -4,6 +4,7 @@
 #include<pthread.h>
 #include<stdio.h>
 #include <atomic>
+#include <list>
 using namespace std;
 void testLista(){
   Lista<int> lista;
@@ -82,8 +83,11 @@ void testCountWords() {
   ConcurrentHashMap h(count_words("corpus"));
   h.print();
 }
-
+void testttt(){
+	list<string> l = { "hola","chau","tarta"};
+	count_words(200,l).print();
+}
 int main(void) {
-	testCountWords();
-
+	testttt();
+	return 0;
 }

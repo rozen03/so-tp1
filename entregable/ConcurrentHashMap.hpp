@@ -53,7 +53,7 @@ void * buscador(void* data){
 class ConcurrentHashMap {
 public:
 
-	Lista<par> tabla[26];
+	Lista<par>* tabla[26];
 	mutex mutexes[26]; // No encontre mejor nombre para el array este
 	int orden(string key) {
 		return key.at(0) - 'a';
@@ -61,7 +61,7 @@ public:
 
 	void print(){
 		for(int i = 0; i < 26; i++) {
-			auto it = tabla[i].CrearIt();
+			auto it = tabla[i]->CrearIt();
 			cout << i << ": ";
 			while(it.HaySiguiente()) {
 				par elemento = it.Siguiente();
@@ -86,12 +86,12 @@ public:
 	void addAndInc(string key){
 		int i = orden(key);
 		mutexes[i].lock();
-		auto it = tabla[i].CrearIt();
+		auto it = tabla[i]->CrearIt();
 		while(it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
 		if (it.HaySiguiente()) // key ya esta definido
 			it.Siguiente().second++;
 		else // key no existe, insertamos (key, 1)
-			tabla[i].push_front(make_pair(key, 1));
+			tabla[i]->push_front(make_pair(key, 1));
 		mutexes[i].unlock();
 	}
 
@@ -99,7 +99,7 @@ public:
 	// Esta operación deberá ser wait-free.
 	bool member(string key){
 			int i = orden(key);
-			auto it = tabla[i].CrearIt();
+			auto it = tabla[i]->CrearIt();
 		while(it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
 		return it.HaySiguiente();
 	}
@@ -113,7 +113,7 @@ public:
 			/* code */
 			mutexes[i].lock();
 		}
-		Busqueda* busqueda = new Busqueda(this->tabla);
+		Busqueda* busqueda = new Busqueda(*this->tabla);
 		pthread_t thread[nt];
 		long long unsigned int tid;
 		for (tid = 0; tid < nt; ++tid){
@@ -129,6 +129,9 @@ public:
 		}
 		return busqueda->max;
 	}
+	ConcurrentHashMap count_words(string arch);
+	ConcurrentHashMap count_words(list<string>archs);
+	ConcurrentHashMap count_words(unsigned int n,list<string>archs);
 };
 
 /*
@@ -143,7 +146,7 @@ void meterEnMapa(ConcurrentHashMap* mapa,string arch){
 	}
 }
 
-ConcurrentHashMap count_words(string arch) {
+ConcurrentHashMap ConcurrentHashMap::count_words(string arch) {
 	ConcurrentHashMap mapa;
 	meterEnMapa(&mapa,arch);
 	return mapa;
@@ -161,7 +164,7 @@ void * threadCount_words1(void * data){
 	meterEnMapa(wrap->mapa,wrap->arch);
 }
 
-ConcurrentHashMap count_words(list<string>archs){
+ConcurrentHashMap ConcurrentHashMap::count_words(list<string>archs){
 	int nt =archs.size();
 	pthread_t thread[nt];
 	ConcurrentHashMap mapa;
@@ -199,7 +202,7 @@ void * threadCount_words2(void * data){
 		meterEnMapa(wrap->mapa,arch);
 	}
 }
-ConcurrentHashMap count_words(unsigned int n,list<string>archs){
+ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n,list<string>archs){
 	int nt =archs.size();
 	pthread_t thread[n];
 	ConcurrentHashMap mapa;
