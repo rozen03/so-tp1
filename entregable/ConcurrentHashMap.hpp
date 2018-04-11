@@ -68,7 +68,7 @@ public:
 				cout << "(" << elemento.first << "," << elemento.second << "), ";
 				it.Avanzar();
 			}
-			cout << endl << endl;
+			cout << endl;
 		}
 	}
 
@@ -139,7 +139,6 @@ void meterEnMapa(ConcurrentHashMap* mapa,string arch){
 	string key;
 	// while (!ifs.eof()) {
 	while(ifs >> key){
-		cout<<key<<endl;
 		mapa->addAndInc(key);
 	}
 }
@@ -177,7 +176,6 @@ ConcurrentHashMap count_words(list<string>archs){
 	for (tid = 0; tid < nt; ++tid){
 		pthread_join(thread[tid], NULL);
 	}
-	mapa.print();
 	return mapa;
 }
 struct WrapperCountWords2{
@@ -196,7 +194,6 @@ void * threadCount_words2(void * data){
 			return NULL;
 		}
 		arch = *wrap->it;
-		cout<<arch<<endl;
 		wrap->it++;
 		wrap->mutexLista->unlock();
 		meterEnMapa(wrap->mapa,arch);
@@ -219,7 +216,6 @@ ConcurrentHashMap count_words(unsigned int n,list<string>archs){
 	for (tid = 0; tid < n; ++tid){
 		pthread_join(thread[tid], NULL);
 	}
-	mapa.print();
 	return mapa;
 }
 #endif /* CONCURRENT_HASH_MAP_H__ */
