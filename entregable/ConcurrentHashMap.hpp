@@ -130,21 +130,18 @@ public:
 		return busqueda->max;
 	}
 };
-struct WrapperCountWords{
-ConcurrentHashMap* mapa;
-string arch;
-};
+
+/*
+**inserta en el mapa las palabras que esten en el archivo
+*/
 void meterEnMapa(ConcurrentHashMap* mapa,string arch){
 	ifstream ifs(arch);
 	string key;
-	while (!ifs.eof()) {
-		ifs >> key;
+	// while (!ifs.eof()) {
+	while(ifs >> key){
+		cout<<key<<endl;
 		mapa->addAndInc(key);
 	}
-}
-void * threadCount_words1(void * data){
-	WrapperCountWords* wrap = (WrapperCountWords*)data;
-	meterEnMapa(wrap->mapa,wrap->arch);
 }
 
 ConcurrentHashMap count_words(string arch) {
@@ -153,25 +150,76 @@ ConcurrentHashMap count_words(string arch) {
 	return mapa;
 }
 
+struct WrapperCountWords1{
+ConcurrentHashMap* mapa;
+string arch;
+};
+/*
+**Funcion thread para count_words(list<string>archs)
+*/
+void * threadCount_words1(void * data){
+	WrapperCountWords1* wrap = (WrapperCountWords1*)data;
+	meterEnMapa(wrap->mapa,wrap->arch);
+}
+
 ConcurrentHashMap count_words(list<string>archs){
 	int nt =archs.size();
 	pthread_t thread[nt];
-	ConcurrentHashMap *mapa;
+	ConcurrentHashMap mapa;
 	int tid=0;
+	WrapperCountWords1 wrap[nt];
 	for (string arch : archs) {
-		WrapperCountWords* wrap;
-		wrap->arch=arch;
-		wrap->mapa=mapa;
-		pthread_create(&thread[tid], NULL, threadCount_words1,  wrap);
+		wrap[tid].arch=arch;
+		wrap[tid].mapa=&mapa;
+		pthread_create(&thread[tid], NULL, threadCount_words1,  &wrap[tid]);
 		tid++;
 	}
 	for (tid = 0; tid < nt; ++tid){
 		pthread_join(thread[tid], NULL);
 	}
-	mapa->print();
-
+	mapa.print();
+	return mapa;
+}
+struct WrapperCountWords2{
+ConcurrentHashMap* mapa;
+mutex *mutexLista;
+list<string>::iterator it;
+list<string>::iterator ends;
+};
+void * threadCount_words2(void * data){
+	WrapperCountWords2* wrap = (WrapperCountWords2*)data;
+	string arch;
+	while(true){
+		wrap->mutexLista->lock();
+		if (wrap->it == wrap->ends){
+			wrap->mutexLista->unlock();
+			return NULL;
+		}
+		arch = *wrap->it;
+		cout<<arch<<endl;
+		wrap->it++;
+		wrap->mutexLista->unlock();
+		meterEnMapa(wrap->mapa,arch);
+	}
 }
 ConcurrentHashMap count_words(unsigned int n,list<string>archs){
+	int nt =archs.size();
+	pthread_t thread[n];
+	ConcurrentHashMap mapa;
+	int tid=0;
+	WrapperCountWords2 wrap;
+	wrap.mapa=&mapa;
+	wrap.mutexLista = new mutex();
+	wrap.it = archs.begin();
+	wrap.ends=archs.end();
+	for (tid = 0; tid < n; ++tid){
+		pthread_create(&thread[tid], NULL, threadCount_words2,  &wrap);
+	}
 
+	for (tid = 0; tid < n; ++tid){
+		pthread_join(thread[tid], NULL);
+	}
+	mapa.print();
+	return mapa;
 }
 #endif /* CONCURRENT_HASH_MAP_H__ */

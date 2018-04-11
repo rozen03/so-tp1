@@ -16,7 +16,7 @@ all: $(BIN)
 
 $(BIN): ListaAtomica.hpp
 mitest: ListaAtomica.hpp ConcurrentHashMap.hpp test.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test.cpp  $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -g -o $@ test.cpp  $(LDLIBS)
 
 #no se si lo de -nostartfiles esta bien, pero al menos asi compiló lpm!
 ConcurrentHashMap.o: ListaAtomica.hpp ConcurrentHashMap.hpp
