@@ -143,9 +143,11 @@ public:
 		}
 		return busqueda->max;
 	}
-	ConcurrentHashMap count_words(string arch);
-	ConcurrentHashMap count_words(list<string>archs);
-	ConcurrentHashMap count_words(unsigned int n,list<string>archs);
+
+	static ConcurrentHashMap count_words(string arch);
+	static ConcurrentHashMap count_words(list<string>archs);
+	static ConcurrentHashMap count_words(unsigned int n,list<string>archs);
+
 };
 
 /*
