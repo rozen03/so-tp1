@@ -18,8 +18,8 @@ public:
 	Lista() : _head(nullptr) {}
 
 	Lista(Lista& lista) {
-		//for (auto it = lista.CrearIt(); it.HaySiguiente(); it.Avanzar())
-		//	push_front(it.Siguiente());
+		for (auto it = lista.CrearIt(); it.HaySiguiente(); it.Avanzar())
+			push_front(it.Siguiente());
 	}
 
 	~Lista() {
