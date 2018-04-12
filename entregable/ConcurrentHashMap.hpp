@@ -89,7 +89,7 @@ public:
 	ConcurrentHashMap operator=(const ConcurrentHashMap& mapa) {
 		for (int i = 0; i < 26; i++) {
 			delete tabla[i];
-			tabla[i] = new Lista<par>(*mapa.tabla[i]);
+			tabla[i] = mapa.tabla[i];
 		}
 		return *this;
 	}
