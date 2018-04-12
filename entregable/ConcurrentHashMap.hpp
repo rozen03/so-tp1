@@ -74,10 +74,24 @@ public:
 
 	// Constructor. Crea la tabla. La misma tendrá 26 en tradas (una por cada letra del abecedario 1 ).
 	// Cada entrada consta de una lista de pares (string, entero). La función de hash será la primer letra del string.
-	ConcurrentHashMap(){} //cambiar esto por ; si vamos a implementarlo a parte
+	ConcurrentHashMap() {
+		for (int i = 0; i < 26; i++) {
+			tabla[i] = new Lista<par>();
+		}
+	}
 
 	ConcurrentHashMap(const ConcurrentHashMap& mapa) {
+		for (int i = 0; i < 26; i++) {
+			tabla[i] = new Lista<par>(*mapa.tabla[i]);
+		}
+	}
 
+	ConcurrentHashMap operator=(const ConcurrentHashMap& mapa) {
+		for (int i = 0; i < 26; i++) {
+			delete tabla[i];
+			tabla[i] = new Lista<par>(*mapa.tabla[i]);
+		}
+		return *this;
 	}
 
 	// Si key existe, incrementa su valor, si no existe, crea el par (key, 1).
@@ -129,9 +143,11 @@ public:
 		}
 		return busqueda->max;
 	}
+
 	static ConcurrentHashMap count_words(string arch);
 	static ConcurrentHashMap count_words(list<string>archs);
 	static ConcurrentHashMap count_words(unsigned int n,list<string>archs);
+
 };
 
 /*
