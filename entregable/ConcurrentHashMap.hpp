@@ -147,7 +147,7 @@ public:
 	static ConcurrentHashMap count_words(string arch);
 	static ConcurrentHashMap count_words(list<string>archs);
 	static ConcurrentHashMap count_words(unsigned int n,list<string>archs);
-
+	static pair<string, unsigned int> maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs);
 };
 
 /*
@@ -237,4 +237,11 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n,list<string>arch
 	}
 	return mapa;
 }
+
+//TODO: Cambiar nombre? (Este es el ej6)
+pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs) {
+	return count_words(p_archivos, archs).maximum(p_maximos);
+}
+
+
 #endif /* CONCURRENT_HASH_MAP_H__ */
