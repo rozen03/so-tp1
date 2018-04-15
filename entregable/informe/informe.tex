@@ -75,6 +75,14 @@ La función dentro de la guarda se comporta así:
 
 Como la misma se encutra negada dentro de un while, solo se vuelve del llamado de push\_front cuando no hay peligro de incoherencias a causa del orden de ejecución.
 
+Luego habia que implementar la clase \texttt{ConcurrentHashMap}, cuya representación interna es un vector de listas de pares de 26 entradas, \texttt{tabla} (una por cada letra) y un vector de mutexs (mutexes?), \texttt{mutexes} de igual cantidad de entradas.
+
+Para el constructor, \texttt{ConcurrentHashMap()}, simplemente se crea en cada entrada de \texttt{tabla} una nueva lista de pares vacía.
+
+Para la función \texttt{void addAndInc(string key)}, se define $i$ como la entrada de \texttt{tabla} a la cual debe ir a parar $key$ en base a su primer caracter (esa es la función de $hash$) y se $lockea$ el mutex en la entrada $i$ de \texttt{mutexes}. Con un iterador se recorre la lista en la entrada $i$ de \texttt{tabla}, si clave existe se incrementa su valor, sino se hace \texttt{push\_front} de la misma. Finalmente se $unlockea$ (no se como ponerle XD) el mutex. 
+
+Para la función \texttt{bool member(string key)}, simplemente se obtiene $i$ de la misma forma que antes y se recorre la entrada correspondiente de \texttt{tabla} con un iterador, si el elemento está se devuelve True y en caso contrario se devuelve False.
+
 \subsection{Ejercicio 2}
 \subsection{Ejercicio 3}
 \subsection{Ejercicio 4}
