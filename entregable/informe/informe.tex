@@ -55,9 +55,26 @@
 \cfoot{\thepage /\pageref{LastPage}}
 
 \section{Introducción}
+Para este trabajo se debía implementar la clase ConcurrentHashMap, una tabla de $hash$ abierta con interfaz de Map (i.e, diccionario) preparada para ser usada por $threads$ concurrentes. 
 
+Se presenta en este informe un breve resumen de la resolución de cada ejercicio y la experimentación y pruebas realizadas. En el Apéndice A se encuentra el enunciado del trabajo.
+  
 \section{Resolución}
 \subsection{Ejercicio 1}
+El primer paso era completar la clase ListaAtomica entregada por la cátedra implementando push\_front de manera que no haya peligro de $race$ $conditions$. 
+
+Para esta operación se crea un nuevo nodo con el valor pasado a como parámetro, $nuevo$, y se hace que apunte como siguiente al actual primer nodo, $head$. Acá faltaría solo asignar $nuevo$ a $head$ de modo que éste sea el actual primer nodo, pero podría pasar que entre la asignación de $nuevo\rightarrow next$ y este último paso alguien más haga un push\_front, no cumpliendo así la condición de que no haya peligro de $race$ $conditions$. Para resolver esto, se realiza esa asignación de la siguiente manera:
+
+while (not atomic\_compare\_exchange\_weak(\&$head$, \&$nuevo\rightarrow next$,$nuevo$))
+
+La función dentro de la guarda se comporta así:
+\begin{itemize}
+\item Si $head$ es igual a $nuevo\rightarrow next$ (i.e, si el $head$ no cambio desde que hicimos que $nuevo$ lo apunte), devuelve True y asigna a $head$, $nuevo$.
+\item Si se da el caso contrario (i.e, el $head$ cambio desde que hicimos que $nuevo$ lo apunte), devuelve False y asigna a $nuevo\rightarrow next$, $head$, es decir, hace que $nuevo$ apunte al $head$ correcto.
+\end{itemize}
+
+Como la misma se encutra negada dentro de un while, solo se vuelve del llamado de push\_front cuando no hay peligro de incoherencias a causa del orden de ejecución.
+
 \subsection{Ejercicio 2}
 \subsection{Ejercicio 3}
 \subsection{Ejercicio 4}
@@ -65,6 +82,8 @@
 \subsection{Ejercicio 6}
 
 \section{Experimentación}
+
+\section{Apéndice A}
 
 \end{document}
 
