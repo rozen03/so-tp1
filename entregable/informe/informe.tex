@@ -98,7 +98,12 @@ La función  \texttt{ConcurrentHashMap::count words(string arch)} es simplemente 
 En lugar de hacer esto diréctamente, implementamos una función \texttt{meterEnMapa(ConcurrentHashMap* mapa,string arch)} que toma un puntero a \texttt{ConcurrentHashMap} y un archivo y hace lo descripto anteriormente. Esto es porque es algo que vamos a usar mucho. Luego, \texttt{ConcurrentHashMap::count words(string arch)} solo crea un \texttt{ConcurrentHashMap} $mapa$ y lo llena usando \texttt{meterEnMapa} antes de devolverlo.
 
 En este punto no debíamos preocuparnos por la concurrencia. 
+
 \subsection{Ejercicio 3}
+Para este ejercicio se volvieron a definir una estructura y una función para ayudarnos. La estructura \texttt{WrapperCountWords1} consta de un puntero a \texttt{ConcurrentHashMap mapa} y un \texttt{string arch}. La función \texttt{void* threadCount\_words1(void* data)} castea $data$ a un puntero a \texttt{WrapperCountWords1} $wrap$ y luego llama a \texttt{meterEnMapa} con $wrap\rightarrow mapa$ y $wrap\rightarrow arch$ como parámetros.
+
+En \texttt{ConcurrentHashMap count\_words(list<string>archs)} incialmente creamos un nuevo \texttt{ConcurrentHashMap} $mapa$ y definimos un entero $nt$ como el largo de $archs$. Luego creamos un arreglo de \texttt{WrapperCountWords1} de $nt$ entradas, $wrap$, donde a cada entrada asignamos un elemento distinto de $archs$ y una referencia a $mapa$, y $nt$ $threads$ a los que les pasamos una entrada de $wrap$ y la función \texttt{threadCount\_words1} como punto de inicio. Finalmente, luego de esperar que todos los $threads$ terminen, devolvemos $mapa$.
+
 \subsection{Ejercicio 4}
 \subsection{Ejercicio 5}
 \subsection{Ejercicio 6}
