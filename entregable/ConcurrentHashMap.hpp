@@ -9,6 +9,10 @@
 #include <pthread.h>
 #include <fstream>
 #include <list>
+#include <time.h>
+
+#define  EXP
+
 using namespace std;
 
 typedef pair<string, unsigned int> par;
@@ -253,6 +257,11 @@ void * thread_maximum(void * data) {
 	return NULL;
 }
 pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs) {
+	#ifdef  EXP
+		struct timespec t_start, t_end;
+		clock_gettime(CLOCK_MONOTONIC, &t_start);
+	#endif
+
 	pthread_t thread[p_archivos];
 	Lista<ConcurrentHashMap>* mapas = new Lista<ConcurrentHashMap>;
 	int tid = 0;
@@ -280,11 +289,30 @@ pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, u
 		}
 	}
 
+	#ifdef  EXP
+		clock_gettime(CLOCK_MONOTONIC, &t_end);
+		cerr <<	((t_end.tv_sec*1000000000 + t_end.tv_nsec) -
+			(t_start.tv_sec*1000000000 + t_start.tv_nsec));
+	#endif
+
 	return mapa.maximum(p_maximos);
 }
 
 pair<string, unsigned int> ConcurrentHashMap::maximum2(unsigned int p_archivos, unsigned int p_maximos, list<string>archs) {
-	return count_words(p_archivos, archs).maximum(p_maximos);
+	#ifdef  EXP
+		struct timespec t_start, t_end;
+		clock_gettime(CLOCK_MONOTONIC, &t_start);
+	#endif
+
+	ConcurrentHashMap mapa =  count_words(p_archivos, archs);
+
+	#ifdef  EXP
+		clock_gettime(CLOCK_MONOTONIC, &t_end);
+		cerr <<  ((t_end.tv_sec*1000000000 + t_end.tv_nsec) -
+				 (t_start.tv_sec*1000000000 + t_start.tv_nsec));
+	#endif
+
+	return  mapa.maximum(p_maximos);
 }
 
 
