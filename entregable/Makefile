@@ -3,7 +3,7 @@
 .SUFFIXES: .o .cpp .hpp
 
 CXX = g++
-CXXFLAGS = -std=c++11 -O3
+CXXFLAGS = -std=c++11
 LDLIBS = -lpthread -lrt
 
 .cpp.o:

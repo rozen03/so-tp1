@@ -256,7 +256,7 @@ void * thread_maximum(void * data) {
 }
 pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs) {
 	#ifdef  EXP
-		struct timespec t_start, t_end;
+		struct timespec t_start, t_med, t_end;
 		clock_gettime(CLOCK_MONOTONIC, &t_start);
 	#endif
 
@@ -277,6 +277,13 @@ pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, u
 		pthread_join(thread[tid], NULL);
 	}
 
+	#ifdef  EXP
+		clock_gettime(CLOCK_MONOTONIC, &t_med);
+		cerr <<	((t_med.tv_sec*1000000000 + t_med.tv_nsec) -
+			(t_start.tv_sec*1000000000 + t_start.tv_nsec));
+		cerr << ",";
+	#endif
+
 	// Merge de los mapas
 	ConcurrentHashMap mapa;
 	for (int i = 0; i < p_archivos; i++) {
@@ -292,7 +299,7 @@ pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, u
 	#ifdef  EXP
 		clock_gettime(CLOCK_MONOTONIC, &t_end);
 		cerr <<	((t_end.tv_sec*1000000000 + t_end.tv_nsec) -
-			(t_start.tv_sec*1000000000 + t_start.tv_nsec));
+			(t_med.tv_sec*1000000000 + t_med.tv_nsec));
 	#endif
 
 	return mapa.maximum(p_maximos);

@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
 		l.push_back("corpus");
 	}
 
-	//p_archivos,ej5,ej6
+	//p_archivos,ej5-load,ej5-merge,ej6
 	for (int p_archivos = 1; p_archivos <= ARCHIVOS; p_archivos++) {
 	    cerr << p_archivos << ",";
 	    ConcurrentHashMap::maximum(p_archivos, p_archivos, l);
