@@ -96,7 +96,8 @@ Ahora, en cuanto a la implementación de la función en cuestión, primero se locke
 La función  \texttt{ConcurrentHashMap::count words(string arch)} es simplemente abrir el arhivo $arch$ e ir pasando los strings capturados a un \texttt{ConcurrentHashMap} usando la función \texttt{addAndInc}.
 
 En lugar de hacer esto diréctamente, implementamos una función \texttt{meterEnMapa(ConcurrentHashMap* mapa,string arch)} que toma un puntero a \texttt{ConcurrentHashMap} y un archivo y hace lo descripto anteriormente. Esto es porque es algo que vamos a usar mucho. Luego, \texttt{ConcurrentHashMap::count words(string arch)} solo crea un \texttt{ConcurrentHashMap} $mapa$ y lo llena usando \texttt{meterEnMapa} antes de devolverlo.
- 
+
+En este punto no debíamos preocuparnos por la concurrencia. 
 \subsection{Ejercicio 3}
 \subsection{Ejercicio 4}
 \subsection{Ejercicio 5}
