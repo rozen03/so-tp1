@@ -61,6 +61,7 @@ Se presenta en este informe un breve resumen de la resolución de cada ejercicio 
   
 \section{Resolución}
 \subsection{Ejercicio 1}
+
 El primer paso era completar la clase ListaAtomica entregada por la cátedra implementando push\_front de manera que no haya peligro de $race$ $conditions$. 
 
 Para esta operación se crea un nuevo nodo con el valor pasado a como parámetro, $nuevo$, y se hace que apunte como siguiente al actual primer nodo, $head$. Acá faltaría solo asignar $nuevo$ a $head$ de modo que éste sea el actual primer nodo, pero podría pasar que entre la asignación de $nuevo\rightarrow next$ y este último paso alguien más haga un push\_front, no cumpliendo así la condición de que no haya peligro de $race$ $conditions$. Para resolver esto, se realiza esa asignación de la siguiente manera:
@@ -83,6 +84,13 @@ Para la función \texttt{void addAndInc(string key)}, se define $i$ como la entra
 
 Para la función \texttt{bool member(string key)}, simplemente se obtiene $i$ de la misma forma que antes y se recorre la entrada correspondiente de \texttt{tabla} con un iterador, si el elemento está se devuelve True y en caso contrario se devuelve False.
 
+La función \texttt{pair<string, unsigned int>maximum(unsigned int nt)} podía ser concurrente con \texttt{member} pero no con \texttt{addAndInc} y además, debía implementarse con concurrencia interna. Antes de explicar la implementación de la función en sí, explicamos una estructura y una función auxiliar definidas para ayudarnos.
+
+Se definió antes una estructura \texttt{Busqueda}, compuesta por un un puntero a lista de par \texttt{mapa}, un entero atómico \texttt{contador}, un par \texttt{max} y un mutex \texttt{mtx\_max}. Para construir una instancia se inicia \texttt{contador} en 0, \texttt{max} en ($" "$, 0) y \texttt{mapa} como una copia de un puntero de lista de par pasada como parámetro.
+
+También se definió la función \texttt{void* buscador(void* data)}. Inicialmente castea $data$ a puntero a \texttt{Busqueda} $busqueda$ e inicia un par local $max$ como ($""$, 0). Luego, dentro de un \texttt{while(true)} se define $i$ como $busqueda\rightarrow contador++$ y se itera la $i$-ésima lista de $busqueda\rightarrow mapa$ actualizando $max$ de manera que quede en éste último el par de máximo valor de esa lista. Originalmente la guarda del \texttt{while} era $i < 26$, pero vimos que un scheduling particular podría traer errores luego haciendo que un $thread$ intente iterar una entrada mayor a 25, por lo que se cambio la guarda a \texttt{true} y luego de la asignación de $i$, si resulta este ser mayor o igual a 26 se hace un \texttt{break}. Finalmente, se lockea $busqueda\rightarrow mtx\_max$ y se actualiza $busqueda\rightarrow max$ al máximo entre él y $max$ antes de unlockear.
+
+Ahora, en cuanto a la implementación de la función en cuestión, primero se lockean todas las entradas de \texttt{mutexes}. Luego se genera un puntero a \texttt{Busqueda} $busqueda$ en base a \texttt{tabla} y $nt$ $threads$ a los que se les pasa $busqueda$ y la función \texttt{buscador} como punto de inicio. Luego de esperar a que los $nt$ $threads$ terminen, se unlockean todas las entradas de \texttt{mutexes} y de devuelve $busqueda\rightarrow max$.
 \subsection{Ejercicio 2}
 \subsection{Ejercicio 3}
 \subsection{Ejercicio 4}
