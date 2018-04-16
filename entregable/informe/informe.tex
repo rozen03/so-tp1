@@ -13,6 +13,7 @@
 \usepackage[spanish,onelanguage,ruled,vlined,nofillcomment]{algorithm2e}
 \usepackage{algpseudocode}
 \usepackage{xcolor}
+\usepackage[final]{pdfpages} % para agregar el enunciado
 %%%%%%%%%%%%%% Formato de párrafos %%%%%%%%%%%%%%%%%%
 \setlength{\parindent}{2em}
 \setlength{\parskip}{3pt}
@@ -92,7 +93,10 @@ También se definió la función \texttt{void* buscador(void* data)}. Inicialmente 
 
 Ahora, en cuanto a la implementación de la función en cuestión, primero se lockean todas las entradas de \texttt{mutexes}. Luego se genera un puntero a \texttt{Busqueda} $busqueda$ en base a \texttt{tabla} y $nt$ $threads$ a los que se les pasa $busqueda$ y la función \texttt{buscador} como punto de inicio. Luego de esperar a que los $nt$ $threads$ terminen, se unlockean todas las entradas de \texttt{mutexes} y de devuelve $busqueda\rightarrow max$.
 \subsection{Ejercicio 2}
+La función  \texttt{ConcurrentHashMap::count words(string arch)} es simplemente abrir el arhivo $arch$ e ir pasando los strings capturados a un \texttt{ConcurrentHashMap} usando la función \texttt{addAndInc}.
 
+En lugar de hacer esto diréctamente, implementamos una función \texttt{meterEnMapa(ConcurrentHashMap* mapa,string arch)} que toma un puntero a \texttt{ConcurrentHashMap} y un archivo y hace lo descripto anteriormente. Esto es porque es algo que vamos a usar mucho. Luego, \texttt{ConcurrentHashMap::count words(string arch)} solo crea un \texttt{ConcurrentHashMap} $mapa$ y lo llena usando \texttt{meterEnMapa} antes de devolverlo.
+ 
 \subsection{Ejercicio 3}
 \subsection{Ejercicio 4}
 \subsection{Ejercicio 5}
@@ -100,7 +104,9 @@ Ahora, en cuanto a la implementación de la función en cuestión, primero se locke
 
 \section{Experimentación}
 
-\section{Apéndice A}
-
+\newpage
+\includepdf[scale=0.75,pages=1,pagecommand=\section{Apéndices}
+\subsection{Apéndice A - Enunciado}]{./../../tp2-enunciado.pdf}
+\includepdf[scale=0.75,pages=2-,pagecommand=]{./../../tp2-enunciado.pdf}
 \end{document}
 
