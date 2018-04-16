@@ -17,6 +17,7 @@ struct Busqueda {
 	Busqueda(Lista<par>* mapa) {
 		contador.store(0);
 		_mapa = mapa;
+		max = make_pair("", 0);
 	}
 	Lista<par>* _mapa;
 	atomic<int> contador;
@@ -133,7 +134,6 @@ public:
 		for (tid = 0; tid < nt; ++tid){
 			pthread_create(&thread[tid], NULL, buscador,  busqueda);
 		}
-		void* max_thread;
 		for (tid = 0; tid < nt; ++tid){
 			pthread_join(thread[tid], NULL);
 		}
@@ -178,6 +178,7 @@ string arch;
 void * threadCount_words1(void * data){
 	WrapperCountWords1* wrap = (WrapperCountWords1*)data;
 	meterEnMapa(wrap->mapa,wrap->arch);
+	return NULL;
 }
 
 ConcurrentHashMap ConcurrentHashMap::count_words(list<string>archs){
@@ -217,9 +218,9 @@ void * threadCount_words2(void * data){
 		wrap->mutexLista->unlock();
 		meterEnMapa(wrap->mapa,arch);
 	}
+	return NULL;
 }
 ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n,list<string>archs){
-	int nt =archs.size();
 	pthread_t thread[n];
 	ConcurrentHashMap mapa;
 	int tid=0;
