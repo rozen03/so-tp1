@@ -3,8 +3,8 @@
 .SUFFIXES: .o .cpp .hpp
 
 CXX = g++
-CXXFLAGS = -std=c++11
-LDLIBS = -lpthread
+CXXFLAGS = -std=c++11 -O3
+LDLIBS = -lpthread -lrt
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
