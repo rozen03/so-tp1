@@ -232,28 +232,26 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n,list<string>arch
 }
 
 struct Wrapper_maximum {
-	Lista<ConcurrentHashMap>* mapas;
+	ConcurrentHashMap* mapa;
 	mutex *mutexLista;
-	list<string>::iterator it;
-	list<string>::iterator ends;
+	list<string>::iterator* it;
+	list<string>::iterator* ends;
 };
 // Funcion thread para maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs)
 void * thread_maximum(void * data) {
 	Wrapper_maximum* wrap = (Wrapper_maximum*)data;
-	ConcurrentHashMap mapa;
 	string arch;
 	while(true){
 		wrap->mutexLista->lock();
-		if (wrap->it == wrap->ends) {
+		if (*(wrap->it) == *(wrap->ends)) {
 			wrap->mutexLista->unlock();
 			break;
 		}
-		arch = *wrap->it;
-		wrap->it++;
+		arch = **wrap->it;
+		(*wrap->it)++;
 		wrap->mutexLista->unlock();
-		meterEnMapa(&mapa, arch);
+		meterEnMapa(wrap->mapa, arch);
 	}
-	wrap->mapas->push_front(mapa);
 	return NULL;
 }
 pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs) {
@@ -263,15 +261,17 @@ pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, u
 	#endif
 
 	pthread_t thread[p_archivos];
-	Lista<ConcurrentHashMap>* mapas = new Lista<ConcurrentHashMap>;
 	int tid = 0;
-	Wrapper_maximum wrap;
-	wrap.mapas = mapas;
-	wrap.mutexLista = new mutex();
-	wrap.it = archs.begin();
-	wrap.ends = archs.end();
+	Wrapper_maximum wrap[p_archivos];
+	mutex mutexLista;
+	list<string>::iterator it = archs.begin();
+	list<string>::iterator ends = archs.end();
 	for (tid = 0; tid < p_archivos; ++tid){
-		pthread_create(&thread[tid], NULL, thread_maximum,  &wrap);
+		wrap[tid].mapa = new ConcurrentHashMap;
+		wrap[tid].mutexLista = &mutexLista;
+		wrap[tid].it = &it;
+		wrap[tid].ends = &ends;
+		pthread_create(&thread[tid], NULL, thread_maximum,  &wrap[tid]);
 	}
 	for (tid = 0; tid < p_archivos; ++tid){
 		pthread_join(thread[tid], NULL);
@@ -279,11 +279,11 @@ pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, u
 
 	// Merge de los mapas
 	ConcurrentHashMap mapa;
-	for (auto it_1 = mapas->CrearIt(); it_1.HaySiguiente(); it_1.Avanzar()) {
-		for (int i = 0; i < 26; i++) {
-			for (auto it_2 = it_1.Siguiente().tabla[i]->CrearIt(); it_2.HaySiguiente(); it_2.Avanzar()) {
-				for (int j = 0; j < it_2.Siguiente().second; j++) {
-					mapa.addAndInc(it_2.Siguiente().first);
+	for (int i = 0; i < p_archivos; i++) {
+		for (int j = 0; j < 26; j++) {
+			for (auto it = wrap[i].mapa->tabla[j]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
+				for (int k = 0; k < it.Siguiente().second; k++) {
+					mapa.addAndInc(it.Siguiente().first);
 				}
 			}
 		}
