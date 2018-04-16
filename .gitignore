@@ -32,3 +32,24 @@
 *.app
 
 mitest
+
+entregable/\.idea/
+entregable/CMakeLists\.txt
+entregable/cmake-build-debug/
+
+entregable/corpus-0
+entregable/corpus-1
+entregable/corpus-2
+entregable/corpus-3
+entregable/corpus-4
+entregable/corpus-max
+entregable/corpus-post
+
+entregable/test-2
+entregable/test-3
+entregable/test-5
+
+*.aux
+*.log
+*.gz
+*.toc

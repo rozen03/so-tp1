@@ -17,7 +17,7 @@ private:
 public:
 	Lista() : _head(nullptr) {}
 
-	Lista(Lista& lista) {
+	Lista(Lista& lista) : _head(nullptr) {
 		for (auto it = lista.CrearIt(); it.HaySiguiente(); it.Avanzar())
 			push_front(it.Siguiente());
 	}
