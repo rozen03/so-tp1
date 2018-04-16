@@ -41,9 +41,9 @@
 \materia{Sistemas Operativos}
 \submateria{Primer cuatrimestre del 2018}
 \titulo{Trabajo Práctico 1: $pthreads$}
-\integrante{Budiño, Gabriel}{046/16}{gabriel.f.budi@gmail.com} % obligatorio 
-\integrante{Garro, Damián}{354/16}{damian.garro.mst@gmail.com} % obligatorio 
-\integrante{Rozen (?}{xxx/xx}{ mail } % obligatorio 
+\integrante{Budiño, Gabriel Fabricio}{046/16}{gabriel.f.budi@gmail.com} % obligatorio 
+\integrante{Garro, Damián Eugenio}{354/16}{damian.garro.mst@gmail.com} % obligatorio 
+\integrante{Rozenberg, Uriel Jonathan}{838/12}{rozenberguriel@gmail.com} % obligatorio 
 
 \maketitle
 
@@ -92,6 +92,7 @@ También se definió la función \texttt{void* buscador(void* data)}. Inicialmente 
 
 Ahora, en cuanto a la implementación de la función en cuestión, primero se lockean todas las entradas de \texttt{mutexes}. Luego se genera un puntero a \texttt{Busqueda} $busqueda$ en base a \texttt{tabla} y $nt$ $threads$ a los que se les pasa $busqueda$ y la función \texttt{buscador} como punto de inicio. Luego de esperar a que los $nt$ $threads$ terminen, se unlockean todas las entradas de \texttt{mutexes} y de devuelve $busqueda\rightarrow max$.
 \subsection{Ejercicio 2}
+
 \subsection{Ejercicio 3}
 \subsection{Ejercicio 4}
 \subsection{Ejercicio 5}
