@@ -24,20 +24,16 @@ struct Busqueda {
 	par max;
 	mutex mtx_max;
 };
-
-void * buscador(void* data){
+void * buscador(void* data) {
 	Busqueda* busqueda = (Busqueda*) data;
 	par max("", 0);
 	while (true) {
 		int i = busqueda->contador++;
-		// cout << i << endl;
 		if (i >= 26) break;
 		auto it = busqueda->_mapa[i].CrearIt();
 		while (it.HaySiguiente()) {
 			if (it.Siguiente().second > max.second) {
-				// cout << "ejejejeojojojo" << endl;
 				max = it.Siguiente();
-				// cout<<max.first<<","<<max.second<<endl;
 			}
 			it.Avanzar();
 		}
@@ -55,7 +51,7 @@ class ConcurrentHashMap {
 public:
 
 	Lista<par>* tabla[26];
-	mutex mutexes[26]; // No encontre mejor nombre para el array este
+	mutex mutexes[26];
 	int orden(string key) {
 		return key.at(0) - 'a';
 	}
@@ -98,7 +94,7 @@ public:
 	// Si key existe, incrementa su valor, si no existe, crea el par (key, 1).
 	// Se debe garantizar que sólo haya contención en caso de colisión de hash.
 	// Esto es, deberá haber locking a nivel de cada elemento del array.
-	void addAndInc(string key){
+	void addAndInc(string key) {
 		int i = orden(key);
 		mutexes[i].lock();
 		auto it = tabla[i]->CrearIt();
@@ -112,9 +108,9 @@ public:
 
 	// true si y solo si el par (key, x) pertenece al hash map para algún x.
 	// Esta operación deberá ser wait-free.
-	bool member(string key){
-			int i = orden(key);
-			auto it = tabla[i]->CrearIt();
+	bool member(string key) {
+		int i = orden(key);
+		auto it = tabla[i]->CrearIt();
 		while(it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
 		return it.HaySiguiente();
 	}
@@ -125,20 +121,18 @@ public:
 	// Los threads procesarán una fila del array. Si no tienen filas por procesar terminarán su ejecución.
 	pair<string, unsigned int>maximum(unsigned int nt){
 		for (size_t i = 0; i < 26; i++) {
-			/* code */
 			mutexes[i].lock();
 		}
 		Busqueda* busqueda = new Busqueda(*this->tabla);
 		pthread_t thread[nt];
 		long long unsigned int tid;
-		for (tid = 0; tid < nt; ++tid){
+		for (tid = 0; tid < nt; ++tid) {
 			pthread_create(&thread[tid], NULL, buscador,  busqueda);
 		}
-		for (tid = 0; tid < nt; ++tid){
+		for (tid = 0; tid < nt; ++tid) {
 			pthread_join(thread[tid], NULL);
 		}
 		for (size_t i = 0; i < 26; i++) {
-			/* code */
 			mutexes[i].unlock();
 		}
 		return busqueda->max;
@@ -148,15 +142,13 @@ public:
 	static ConcurrentHashMap count_words(list<string>archs);
 	static ConcurrentHashMap count_words(unsigned int n,list<string>archs);
 	static pair<string, unsigned int> maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs);
+	static pair<string, unsigned int> maximum2(unsigned int p_archivos, unsigned int p_maximos, list<string>archs);
 };
 
-/*
-**inserta en el mapa las palabras que esten en el archivo
-*/
-void meterEnMapa(ConcurrentHashMap* mapa,string arch){
+// Inserta en el mapa las palabras que esten en el archivo
+void meterEnMapa(ConcurrentHashMap* mapa,string arch) {
 	ifstream ifs(arch);
 	string key;
-	// while (!ifs.eof()) {
 	while(ifs >> key){
 		mapa->addAndInc(key);
 	}
@@ -164,33 +156,31 @@ void meterEnMapa(ConcurrentHashMap* mapa,string arch){
 
 ConcurrentHashMap ConcurrentHashMap::count_words(string arch) {
 	ConcurrentHashMap mapa;
-	meterEnMapa(&mapa,arch);
+	meterEnMapa(&mapa, arch);
 	return mapa;
 }
 
-struct WrapperCountWords1{
-ConcurrentHashMap* mapa;
-string arch;
+
+struct Wrapper_count_words1{
+	ConcurrentHashMap* mapa;
+	string arch;
 };
-/*
-**Funcion thread para count_words(list<string>archs)
-*/
-void * threadCount_words1(void * data){
-	WrapperCountWords1* wrap = (WrapperCountWords1*)data;
-	meterEnMapa(wrap->mapa,wrap->arch);
+// Funcion thread para count_words(list<string>archs)
+void * thread_count_words1(void * data) {
+	Wrapper_count_words1* wrap = (Wrapper_count_words1*)data;
+	meterEnMapa(wrap->mapa, wrap->arch);
 	return NULL;
 }
-
-ConcurrentHashMap ConcurrentHashMap::count_words(list<string>archs){
-	int nt =archs.size();
+ConcurrentHashMap ConcurrentHashMap::count_words(list<string>archs) {
+	int nt = archs.size();
 	pthread_t thread[nt];
 	ConcurrentHashMap mapa;
-	int tid=0;
-	WrapperCountWords1 wrap[nt];
+	int tid = 0;
+	Wrapper_count_words1 wrap[nt];
 	for (string arch : archs) {
-		wrap[tid].arch=arch;
-		wrap[tid].mapa=&mapa;
-		pthread_create(&thread[tid], NULL, threadCount_words1,  &wrap[tid]);
+		wrap[tid].arch = arch;
+		wrap[tid].mapa = &mapa;
+		pthread_create(&thread[tid], NULL, thread_count_words1,  &wrap[tid]);
 		tid++;
 	}
 	for (tid = 0; tid < nt; ++tid){
@@ -198,41 +188,42 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string>archs){
 	}
 	return mapa;
 }
-struct WrapperCountWords2{
-ConcurrentHashMap* mapa;
-mutex *mutexLista;
-list<string>::iterator it;
-list<string>::iterator ends;
+
+struct Wrapper_count_words2{
+    ConcurrentHashMap* mapa;
+    mutex *mutexLista;
+    list<string>::iterator it;
+    list<string>::iterator ends;
 };
-void * threadCount_words2(void * data){
-	WrapperCountWords2* wrap = (WrapperCountWords2*)data;
+// Funcion thread para count_words(unsigned int n,list<string>archs)
+void * thread_count_words2(void * data) {
+	Wrapper_count_words2* wrap = (Wrapper_count_words2*)data;
 	string arch;
 	while(true){
 		wrap->mutexLista->lock();
-		if (wrap->it == wrap->ends){
+		if (wrap->it == wrap->ends) {
 			wrap->mutexLista->unlock();
 			return NULL;
 		}
 		arch = *wrap->it;
 		wrap->it++;
 		wrap->mutexLista->unlock();
-		meterEnMapa(wrap->mapa,arch);
+		meterEnMapa(wrap->mapa, arch);
 	}
 	return NULL;
 }
-ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n,list<string>archs){
+ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n,list<string>archs) {
 	pthread_t thread[n];
 	ConcurrentHashMap mapa;
-	int tid=0;
-	WrapperCountWords2 wrap;
-	wrap.mapa=&mapa;
+	int tid = 0;
+	Wrapper_count_words2 wrap;
+	wrap.mapa = &mapa;
 	wrap.mutexLista = new mutex();
 	wrap.it = archs.begin();
-	wrap.ends=archs.end();
+	wrap.ends = archs.end();
 	for (tid = 0; tid < n; ++tid){
-		pthread_create(&thread[tid], NULL, threadCount_words2,  &wrap);
+		pthread_create(&thread[tid], NULL, thread_count_words2,  &wrap);
 	}
-
 	for (tid = 0; tid < n; ++tid){
 		pthread_join(thread[tid], NULL);
 	}
@@ -240,7 +231,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n,list<string>arch
 }
 
 //TODO: Cambiar nombre? (Este es el ej6)
-pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs) {
+pair<string, unsigned int> ConcurrentHashMap::maximum2(unsigned int p_archivos, unsigned int p_maximos, list<string>archs) {
 	return count_words(p_archivos, archs).maximum(p_maximos);
 }
 
