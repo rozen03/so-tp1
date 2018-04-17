@@ -101,7 +101,7 @@ Para la función \texttt{void addAndInc(string key)} se debía garantizar contensi
 \caption{addAndInc}
 \end{algorithm} 
 
-Para la función \texttt{bool member(string key)}, simplemente se obtiene \texttt{i} de la misma forma que antes y se recorre la entrada correspondiente de \texttt{tabla} con un iterador, si el elemento está se devuelve True y en caso contrario se devuelve False. Esta operación es \textit{wait free} ya que no se aplica ningún mecanismo de $locking$. Podría ocurrir que en el medio de la operación se ejecute un \texttt{push\_front} del elemento buscado, y que \texttt{member} devolviese False o True dependiendo si ya había empezado a recorrer la entrada de la tabla o no. Esto no es un problema, porque ambos resultados se corresponden con una posible ejecución secuencial de las operaciones.
+Para la función \texttt{bool member(string key)}, simplemente se obtiene \texttt{i} de la misma forma que antes y se recorre la entrada correspondiente de \texttt{tabla} con un iterador, si el elemento está se devuelve True y en caso contrario se devuelve False. Esta operación es \textit{wait free} ya que no se aplica ningún mecanismo de $locking$. Podría ocurrir que en el medio de la operación se ejecute un \texttt{push\_front} del elemento buscado, y que \texttt{member} devolviese False o True dependiendo de si ya había empezado a recorrer la entrada de la tabla o no. Esto no es un problema, porque ambos resultados se corresponden con una posible ejecución secuencial de las operaciones.
 
 Para la función \texttt{pair<string, unsigned int>maximum(unsigned int nt)} se definieron una una estructura y una función auxiliar, así que primero explicamos eso.
 
@@ -158,11 +158,13 @@ Ahora, haciendo uso de la estructura y la función mencionadas, el pseudocódigo d
 Este ejercicio pedía concurrencia interna, la cual se logra usando el entero atómico \texttt{contador}, esto me asegura que durante la ejecución de \texttt{maximum} cada $thread$ va a trabajar sobre una entrada diferente. Aún así, para asegurarnos de que no sea concurrente con \texttt{addAndInc} se debe hacer lock a todos las entradas de \texttt{mutexes} y unlock solo al terminar. 
 
 \subsection{Ejercicio 2}
+
 En este punto no debíamos preocuparnos por la concurrencia. Así que la función  \texttt{count\_words(string arch)} es simplemente abrir el arhivo \texttt{arch} e ir pasando los strings capturados a un \texttt{ConcurrentHashMap} haciendo uso de \texttt{addAndInc}.
 
 En lugar de hacer esto directamente, implementamos una función \texttt{meterEnMapa(ConcurrentHashMap* mapa, string arch)} que toma un puntero a \texttt{ConcurrentHashMap} y un archivo y hace lo descripto anteriormente. Esto es porque es algo que vamos a usar mucho. Luego, \texttt{count\_words(string arch)} solo crea un \texttt{ConcurrentHashMap} \texttt{mapa} y lo llena usando \texttt{meterEnMapa} antes de devolverlo.
 
 \subsection{Ejercicio 3}
+
 Para este ejercicio se volvieron a definir una estructura y una función para ayudarnos. La estructura \texttt{Wrapper\_count\_words1} consta de un puntero a \texttt{ConcurrentHashMap mapa} y un \texttt{string arch}. La función \texttt{void* thread\_count\_words1(void* data)} castea \texttt{data} a un puntero a \texttt{Wrapper\_count\_words1} \texttt{wrap} y luego llama a \texttt{meterEnMapa} con \texttt{wrap$\rightarrow$mapa} y \texttt{wrap$\rightarrow$arch} como parámetros.
 
 Usando la función y la estructura recien definidas, el pseudocódigo de \texttt{count\_words} es el siguiente.
@@ -188,6 +190,7 @@ Usando la función y la estructura recien definidas, el pseudocódigo de \texttt{c
 Cada $thread$ tiene en su \texttt{wrap} un archivo distinto, pero todos tienen el mismo \texttt{mapa}, por lo que al final éste contiene los datos de todos los archivos.
 
 \subsection{Ejercicio 4}
+
 Se definió la estructura \texttt{Wrapper\_count\_words2}, que consta de un puntero a \texttt{ConcurrentHashMap mapa}, un puntero a mutex \texttt{mutexLista} y dos iteradores de lista de string, \texttt{it} y \texttt{ends}.
 
 La función \texttt{thread\_count\_words2} tiene el siguiente pseudocodigo:
@@ -240,7 +243,7 @@ Notar que los \texttt{n} threads comparten el mismo \texttt{ConcurrentHashMap}. 
 
 \subsection{Ejercicio 5}
 
-La estructura \texttt{Wrapper\_maximum} es similar a la anterior, consta de un puntero a \texttt{ConcurrentHashMap mapa}, uno a mutex \texttt{mutexLista}, y dos a iteradores de lista de string, \texttt{it} y \texttt{ends}. Básicamente, los que en la anterior eran iteradores, acá son punteros a los mismos. Esto lo hicimos de esta manera porque cada $thread$ va a armar un \texttt{mapa} distinto, así que cada uno trabaja con un \texttt{wrap} distitno, por lo que necesitamos que lo que pasamos punteros a los iteradores para que todos compartan lo mismo (y así nos aseguramos de que carguen archivos distintos).
+La estructura \texttt{Wrapper\_maximum} es similar a la anterior, consta de un puntero a \texttt{ConcurrentHashMap mapa}, uno a mutex \texttt{mutexLista}, y dos a iteradores de lista de string, \texttt{it} y \texttt{ends}. Básicamente, los que en la anterior eran iteradores, acá son punteros a los mismos. Esto lo hicimos de esta manera porque cada $thread$ va a armar un \texttt{mapa} distinto, así que cada uno trabaja con un \texttt{wrap} diferente, por lo que necesitamos pasarle punteros a los iteradores para que todos compartan los mismos (y así nos aseguramos de que carguen archivos distintos).
 
 A su vez, la función auxiliar \texttt{thread\_maximum} es casi idéntica a \texttt{thread\_count\_words2}. La única diferencia es que al tratar con \texttt{it} y \texttt{ends}, hay que desreferenciarlos.
 
@@ -258,7 +261,7 @@ El pseudocódigo de \texttt{maximum(unsigned int p\_archivos, unsigned int p\_max
 	\ForEach{entrada de \texttt{wrap}}{
 		asignarle direcciones de un nuevo \texttt{CHM}, \texttt{mutexList}, \texttt{it} y \texttt{ends} \\
 	}
-	crear \texttt{p\_archivos} threads con una referencia a un entrada de \texttt{wrap} y a \texttt{thread\_maximum} \\
+	crear \texttt{p\_archivos} threads con un puntero a una entrada de \texttt{wrap} y a \texttt{thread\_maximum} \\
 	esperar que terminen los \texttt{p\_archivos} threads \\
 	\texttt{mapa} $\leftarrow$ nuevo \texttt{CHM} \\
 	\texttt{mapa} $\leftarrow$ merge de los mapas en las entradas de \texttt{wrap} \\
