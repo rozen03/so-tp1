@@ -53,3 +53,5 @@ entregable/test-5
 *.log
 *.gz
 *.toc
+
+entregable/\.ipynb_checkpoints/

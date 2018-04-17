@@ -36,7 +36,6 @@ public:
 		/* Completar. Debe ser atómico. */
 		Nodo * nuevo = new Nodo(val);
 		nuevo->_next = _head.load();
-		//use la version weak por q las notas de cpp reference dicen q tiene mejor performance en general
 		while(!atomic_compare_exchange_weak(&_head,&nuevo->_next,nuevo));
 	}
 

@@ -41,7 +41,7 @@
 
 \materia{Sistemas Operativos}
 \submateria{Primer cuatrimestre del 2018}
-\titulo{Trabajo Práctico 1: $pthreads$}
+\titulo{Trabajo Práctico 1: \texttt{pthreads}}
 \integrante{Budiño, Gabriel Fabricio}{046/16}{gabriel.f.budi@gmail.com} % obligatorio 
 \integrante{Garro, Damián Eugenio}{354/16}{damian.garro.mst@gmail.com} % obligatorio 
 \integrante{Rozenberg, Uriel Jonathan}{838/12}{rozenberguriel@gmail.com} % obligatorio 
@@ -64,25 +64,25 @@ Se presenta en este informe un breve resumen de la resolución de cada ejercicio 
 \section{Resolución}
 \subsection{Ejercicio 1}
 
-El primer paso era completar la clase \texttt{ListaAtomica} entregada por la cátedra implementando \texttt{push\_front} de manera que no haya peligro de $race$ $conditions$. 
+El primer paso era completar la clase \texttt{ListaAtomica} entregada por la cátedra implementando \texttt{push\_front} de manera que sea \textit{atómica} y no haya peligro de $race$ $conditions$. 
 
-Para esta operación se crea un nuevo nodo con el valor pasado a como parámetro, $nuevo$, y se hace que apunte como siguiente al actual primer nodo, $head$. Acá faltaría solo asignar $nuevo$ a $head$ de modo que éste sea el actual primer nodo, pero podría pasar que entre la asignación de $nuevo\rightarrow next$ y este último paso alguien más haga un push\_front, no cumpliendo así la condición de que no haya peligro de $race$ $conditions$. Para resolver esto, se realiza esa asignación de la siguiente manera:
+Para esta operación se crea un nuevo nodo con el valor pasado a como parámetro, \texttt{nuevo}, y se hace que apunte como siguiente al actual primer nodo, \texttt{head}. Acá faltaría solo asignar \texttt{nuevo} a \texttt{head} de modo que éste sea el actual primer nodo, pero podría pasar que entre la asignación de \texttt{nuevo$\rightarrow$next} y este último paso alguien más haga un \texttt{push\_front}, no cumpliendo así la condición de que no haya peligro de $race$ $conditions$. Para resolver esto, se realiza esa asignación de la siguiente manera:
 
-\texttt{while (not atomic\_compare\_exchange\_weak(\&$head$, \&$nuevo\rightarrow next$,$nuevo$))}
+\texttt{while (not atomic\_compare\_exchange\_weak(\&head, \&nuevo$\rightarrow$next,nuevo))}
 
-La función dentro de la guarda se comporta así:
+La función dentro de la guarda se comporta así, de forma atómica:
 \begin{itemize}
-\item Si $head$ es igual a $nuevo\rightarrow next$ (i.e, si el $head$ no cambio desde que hicimos que $nuevo$ lo apunte), devuelve True y asigna a $head$, $nuevo$.
-\item Si se da el caso contrario (i.e, el $head$ cambio desde que hicimos que $nuevo$ lo apunte), devuelve False y asigna a $nuevo\rightarrow next$, $head$, es decir, hace que $nuevo$ apunte al $head$ correcto.
+\item Si \texttt{head} es igual a \texttt{nuevo$\rightarrow$next} (i.e, si el \texttt{head} no cambió desde que hicimos que \texttt{nuevo} lo apunte), devuelve True y asigna a \texttt{head}, \texttt{nuevo}.
+\item Si se da el caso contrario (i.e, el \texttt{head} cambio desde que hicimos que \texttt{nuevo} lo apunte), devuelve False y asigna a \texttt{nuevo$\rightarrow$next}, \texttt{head}, es decir, hace que \texttt{nuevo} apunte al \texttt{head} correcto.
 \end{itemize}
 
-Como la misma se encutra negada dentro de un while, solo se vuelve del llamado de push\_front cuando no hay peligro de incoherencias a causa del orden de ejecución.
+Como la misma se encuentra negada dentro de un while, solo se vuelve del llamado de \texttt{push\_front} cuando no hay peligro de incoherencias a causa del orden de ejecución.
 
-Luego habia que implementar la clase \texttt{ConcurrentHashMap}, cuya representación interna es un vector de listas de pares de 26 entradas, \texttt{tabla} (una por cada letra) y un vector de mutexs (mutexes?), \texttt{mutexes} de igual cantidad de entradas.
+Luego había que implementar la clase \texttt{ConcurrentHashMap}, cuya representación interna es un vector de listas de pares de 26 entradas, \texttt{tabla} (una por cada letra) y un vector de mutex, \texttt{mutexes} de igual cantidad de entradas. 
 
 Para el constructor, \texttt{ConcurrentHashMap()}, simplemente se crea en cada entrada de \texttt{tabla} una nueva lista de pares vacía.
 
-Para la función \texttt{void addAndInc(string key)} se debía garantizar contensión solo en caso de colisión de $hash$. Para lograr esto, se hace $locking$ en cada entrada de \texttt{tabla} usando el arreglo de mutexs \texttt{mutexes}, de manera que ejecuciones concurrentes se permitan siempre que se trate de escrituras a distintas listas.  
+Para la función \texttt{void addAndInc(string key)} se debía garantizar contensión solo en caso de colisión de $hash$. Para lograr esto, se hace $locking$ en la entrada de \texttt{tabla} que se va a modificar usando el arreglo \texttt{mutexes}, de manera que ejecuciones concurrentes se permitan siempre que se trate de escrituras a distintas listas.  
 
 
 \begin{algorithm}[H]
@@ -90,18 +90,18 @@ Para la función \texttt{void addAndInc(string key)} se debía garantizar contensi
 \SetKwProg{Fn}{Función}{}{fin}
 
 \SetAlgoLined
-\Fn{addAndInc($key$)}{
-	$i$ $\leftarrow$ función de hash de $key$ \\
-	\texttt{mutexes}[$i$].lock \\
-	iterar \texttt{tabla}[$i$] buscando $key$ \\
+\Fn{addAndInc(key)}{
+	\texttt{i} $\leftarrow$ función de hash de \texttt{key} \\
+	\texttt{mutexes[i].lock} \\
+	iterar \texttt{tabla[i]} buscando \texttt{key} \\
 	\If{está} {sumar 1 a su valor}
-    \Else{\texttt{tabla}[$i$].push\_front($key$)}
-    \texttt{mutexes}[$i$].unlock \\
+    \Else{\texttt{tabla[i].push\_front(key)}}
+    \texttt{mutexes[i].unlock} \\
 }
 \caption{addAndInc}
 \end{algorithm} 
 
-Para la función \texttt{bool member(string key)}, simplemente se obtiene $i$ de la misma forma que antes y se recorre la entrada correspondiente de \texttt{tabla} con un iterador, si el elemento está se devuelve True y en caso contrario se devuelve False.
+Para la función \texttt{bool member(string key)}, simplemente se obtiene \texttt{i} de la misma forma que antes y se recorre la entrada correspondiente de \texttt{tabla} con un iterador, si el elemento está se devuelve True y en caso contrario se devuelve False. Esta operación es \textit{wait free} ya que no se aplica ningún mecanismo de $locking$. Podría ocurrir que en el medio de la operación se ejecute un \texttt{push\_front} del elemento buscado, y que \texttt{member} devolviese False o True dependiendo si ya había empezado a recorrer la entrada de la tabla o no. Esto no es un problema, porque ambos resultados se corresponden con una posible ejecución secuencial de las operaciones.
 
 Para la función \texttt{pair<string, unsigned int>maximum(unsigned int nt)} se definieron una una estructura y una función auxiliar, así que primero explicamos eso.
 
@@ -113,27 +113,27 @@ También se definió la función \texttt{void* buscador(void* data)}, cuyo pseudocó
 \SetKwProg{Fn}{Función}{}{fin}
 
 \SetAlgoLined
-\Fn{buscador($data$)}{
-	$busqueda$ $\leftarrow$ $data$ como puntero a \texttt{Busqueda} \\
-	$max$ $\leftarrow$ ($""$, 0) \\
+\Fn{buscador(data)}{
+	\texttt{busqueda $\leftarrow$ data}como puntero a \texttt{Busqueda} \\
+	\texttt{max} $\leftarrow$ \texttt{($``"$, 0)} \\
 	\While{\texttt{true}} {
-		$i$ $\leftarrow$ $busqueda$.contador++ \\
-		\If{$i > 25$} {terminar}	
-		iterar $busqueda$.mapa[$i$] \\
-		\If{algún elemento tiene valor mayor al valor de $max$}{
-		actualizar $max$ con ese elemento		
+		\texttt{i $\leftarrow$ busqueda.contador++} \\
+		\If{\texttt{i} $> 25$} {terminar}	
+		iterar \texttt{busqueda.mapa[i]}\\
+		\If{algún elemento tiene valor mayor al valor de \texttt{max}}{
+		actualizar \texttt{max} con ese elemento		
 		}
 	}
-	$busqueda.mtx\_max$.lock \\
-	\If{el valor de $max$ es mayor que el del $busqueda.max$}{
-		$busqueda.max$ $\leftarrow$ $max$ \\
+	\texttt{busqueda.mtx\_max.lock} \\
+	\If{el valor de \texttt{max} es mayor que el del \texttt{busqueda.max}}{
+		\texttt{busqueda.max $\leftarrow$ max} \\
 	}
-	$busqueda.mtx\_max$.unlock \\
+	\texttt{busqueda.mtx\_max.unlock} \\
 }
 \caption{buscador}
 \end{algorithm} 
 
-Originalmente la guarda del \texttt{while} era $i < 26$, pero vimos que un scheduling particular podría traer errores luego haciendo que un $thread$ intente iterar una entrada mayor a 25, por lo que se cambio la guarda a \texttt{true} y luego de la asignación de $i$, si resulta este ser mayor o igual a 26 se hace un \texttt{break}. La única sección crítica acá es la actualización del máximo, que se resolvió usando $locking$ con el mutex interno de la estructura \texttt{Busqueda}.
+Originalmente la guarda del \texttt{while} era \texttt{i} $< 26$, pero vimos que un scheduling particular podría traer errores luego haciendo que un $thread$ intente iterar una entrada mayor a 25, por lo que se cambio la guarda a \texttt{true} y luego de la asignación de \texttt{i}, si resulta este ser mayor o igual a 26 se hace un \texttt{break}. La única sección crítica acá es la actualización del máximo, que se resolvió usando $locking$ con el mutex interno de la estructura \texttt{Busqueda}.
 
 Ahora, haciendo uso de la estructura y la función mencionadas, el pseudocódigo de \texttt{maximum} es el siguiente.
 
@@ -141,16 +141,16 @@ Ahora, haciendo uso de la estructura y la función mencionadas, el pseudocódigo d
 \SetKwProg{Fn}{Función}{}{fin}
 
 \SetAlgoLined
-\Fn{maximum($nt$)}{
+\Fn{maximum(nt)}{
 	lock a todas las entradas de \texttt{mutexes} \\
-	$busqueda$ $\leftarrow$ nueva \texttt{Busqueda} \\
-	$busqueda.mapa$ $\leftarrow$ \texttt{tabla} \\
-	$busqueda.contador$ $\leftarrow$ \texttt{0} \\
-	$busqueda.max$ $\leftarrow$ \texttt{($""$, 0)} \\
-	crear $nt$ threads y pasarles $busqueda$ y la función \texttt{buscador} como punto de inicio \\
-	esperar que terminen los $nt$ threads \\
+	\texttt{busqueda} $\leftarrow$ nueva \texttt{Busqueda} \\
+	\texttt{busqueda.mapa} $\leftarrow$ \texttt{tabla} \\
+	\texttt{busqueda.contador} $\leftarrow$ \texttt{0} \\
+	\texttt{busqueda.max} $\leftarrow$ \texttt{($``"$, 0)} \\
+	crear \texttt{nt} threads y pasarles \texttt{busqueda} y la función \texttt{buscador} como punto de inicio \\
+	esperar que terminen los \texttt{nt} threads \\
 	unlock a todas las entradas de \texttt{mutexes} \\
-	devolver $busqueda.max$
+	devolver \texttt{busqueda.max}
 }
 \caption{maximum}
 \end{algorithm} 
