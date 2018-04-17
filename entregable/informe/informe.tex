@@ -59,11 +59,12 @@
 Para este trabajo se debía implementar la clase ConcurrentHashMap, una tabla de $hash$ abierta con interfaz de Map (i.e, diccionario) preparada para ser usada por $threads$ concurrentes. 
 
 Se presenta en este informe un breve resumen de la resolución de cada ejercicio y la experimentación y pruebas realizadas. En el Apéndice A se encuentra el enunciado del trabajo.
-  
+
+
 \section{Resolución}
 \subsection{Ejercicio 1}
 
-El primer paso era completar la clase ListaAtomica entregada por la cátedra implementando push\_front de manera que no haya peligro de $race$ $conditions$. 
+El primer paso era completar la clase \texttt{ListaAtomica} entregada por la cátedra implementando \texttt{push\_front} de manera que no haya peligro de $race$ $conditions$. 
 
 Para esta operación se crea un nuevo nodo con el valor pasado a como parámetro, $nuevo$, y se hace que apunte como siguiente al actual primer nodo, $head$. Acá faltaría solo asignar $nuevo$ a $head$ de modo que éste sea el actual primer nodo, pero podría pasar que entre la asignación de $nuevo\rightarrow next$ y este último paso alguien más haga un push\_front, no cumpliendo así la condición de que no haya peligro de $race$ $conditions$. Para resolver esto, se realiza esa asignación de la siguiente manera:
 
@@ -81,28 +82,106 @@ Luego habia que implementar la clase \texttt{ConcurrentHashMap}, cuya representa
 
 Para el constructor, \texttt{ConcurrentHashMap()}, simplemente se crea en cada entrada de \texttt{tabla} una nueva lista de pares vacía.
 
-Para la función \texttt{void addAndInc(string key)}, se define $i$ como la entrada de \texttt{tabla} a la cual debe ir a parar $key$ en base a su primer caracter (esa es la función de $hash$) y se $lockea$ el mutex en la entrada $i$ de \texttt{mutexes}. Con un iterador se recorre la lista en la entrada $i$ de \texttt{tabla}, si clave existe se incrementa su valor, sino se hace \texttt{push\_front} de la misma. Finalmente se $unlockea$ (no se como ponerle XD) el mutex. 
+Para la función \texttt{void addAndInc(string key)} se debía garantizar contensión solo en caso de colisión de $hash$. Para lograr esto, se hace $locking$ en cada entrada de \texttt{tabla} usando el arreglo de mutexs \texttt{mutexes}, de manera que ejecuciones concurrentes se permitan siempre que se trate de escrituras a distintas listas.  
+
+
+\begin{algorithm}[H]
+
+\SetKwProg{Fn}{Función}{}{fin}
+
+\SetAlgoLined
+\Fn{addAndInc($key$)}{
+	$i$ $\leftarrow$ función de hash de $key$ \\
+	\texttt{mutexes}[$i$].lock \\
+	iterar \texttt{tabla}[$i$] buscando $key$ \\
+	\If{está} {sumar 1 a su valor}
+    \Else{\texttt{tabla}[$i$].push\_front($key$)}
+    \texttt{mutexes}[$i$].unlock \\
+}
+\caption{addAndInc}
+\end{algorithm} 
 
 Para la función \texttt{bool member(string key)}, simplemente se obtiene $i$ de la misma forma que antes y se recorre la entrada correspondiente de \texttt{tabla} con un iterador, si el elemento está se devuelve True y en caso contrario se devuelve False.
 
-La función \texttt{pair<string, unsigned int>maximum(unsigned int nt)} podía ser concurrente con \texttt{member} pero no con \texttt{addAndInc} y además, debía implementarse con concurrencia interna. Antes de explicar la implementación de la función en sí, explicamos una estructura y una función auxiliar definidas para ayudarnos.
+Para función \texttt{pair<string, unsigned int>maximum(unsigned int nt)} se definieron una una estructura y una función auxiliar, así que primero explicamos eso.
 
 Se definió antes una estructura \texttt{Busqueda}, compuesta por un un puntero a lista de par \texttt{mapa}, un entero atómico \texttt{contador}, un par \texttt{max} y un mutex \texttt{mtx\_max}. Para construir una instancia se inicia \texttt{contador} en 0, \texttt{max} en ($" "$, 0) y \texttt{mapa} como una copia de un puntero de lista de par pasada como parámetro.
 
-También se definió la función \texttt{void* buscador(void* data)}. Inicialmente castea $data$ a puntero a \texttt{Busqueda} $busqueda$ e inicia un par local $max$ como ($""$, 0). Luego, dentro de un \texttt{while(true)} se define $i$ como $busqueda\rightarrow contador++$ y se itera la $i$-ésima lista de $busqueda\rightarrow mapa$ actualizando $max$ de manera que quede en éste último el par de máximo valor de esa lista. Originalmente la guarda del \texttt{while} era $i < 26$, pero vimos que un scheduling particular podría traer errores luego haciendo que un $thread$ intente iterar una entrada mayor a 25, por lo que se cambio la guarda a \texttt{true} y luego de la asignación de $i$, si resulta este ser mayor o igual a 26 se hace un \texttt{break}. Finalmente, se lockea $busqueda\rightarrow mtx\_max$ y se actualiza $busqueda\rightarrow max$ al máximo entre él y $max$ antes de unlockear.
+También se definió la función \texttt{void* buscador(void* data)}, cuyo pseudocódigo es el siguiente.
 
-Ahora, en cuanto a la implementación de la función en cuestión, primero se lockean todas las entradas de \texttt{mutexes}. Luego se genera un puntero a \texttt{Busqueda} $busqueda$ en base a \texttt{tabla} y $nt$ $threads$ a los que se les pasa $busqueda$ y la función \texttt{buscador} como punto de inicio. Luego de esperar a que los $nt$ $threads$ terminen, se unlockean todas las entradas de \texttt{mutexes} y de devuelve $busqueda\rightarrow max$.
+\begin{algorithm}[H]
+\SetKwProg{Fn}{Función}{}{fin}
+
+\SetAlgoLined
+\Fn{buscador($data$)}{
+	$busqueda$ $\leftarrow$ $data$ como puntero a \texttt{Busqueda} \\
+	$max$ $\leftarrow$ ($""$, 0) \\
+	\While{\texttt{true}} {
+		$i$ $\leftarrow$ $busqueda$.contador++ \\
+		\If{$i > 25$} {terminar}	
+		iterar $busqueda$.mapa[$i$] \\
+		\If{algún elemento tiene valor mayor al valor de $max$}{
+		actualizar $max$ con ese elemento		
+		}
+	}
+	$busqueda$.\texttt{mtx\_max}.lock \\
+	\If{el valor de $max$ es mayor que el del $busqueda$.max}{
+		$busqueda$.max $\leftarrow$ $max$ \\
+	}
+	$busqueda$.\texttt{mtx\_max}.unlock \\
+}
+\caption{buscador}
+\end{algorithm} 
+
+Originalmente la guarda del \texttt{while} era $i < 26$, pero vimos que un scheduling particular podría traer errores luego haciendo que un $thread$ intente iterar una entrada mayor a 25, por lo que se cambio la guarda a \texttt{true} y luego de la asignación de $i$, si resulta este ser mayor o igual a 26 se hace un \texttt{break}. La única sección crítica acá es la actualización del máximo, que se resolvió usando $locking$ con el mutex interno de la estructura \texttt{Busqueda}.
+
+Ahora, haciendo uso de la estructura y la función mencionadas, el pseudocódigo de \texttt{maximum} es el siguiente.
+
+\begin{algorithm}[H]
+\SetKwProg{Fn}{Función}{}{fin}
+
+\SetAlgoLined
+\Fn{maximum($nt$)}{
+	lock a todas las entradas de \texttt{mutexes} \\
+	$busqueda$ $\leftarrow$ puntero a \texttt{Busqueda} construida de \texttt{tabla} \\
+	crear $nt$ threads y pasarles $busqueda$ y \texttt{buscador} como punto de inicio \\
+	esperar que terminen los $nt$ threads \\
+	unlock a todas las entradas de \texttt{mutexes} \\
+	devolver $busqueda.max$
+}
+\caption{maximum}
+\end{algorithm} 
+
+Este ejercicio pedía concurrencia interna, la cual se logra usando el entero atómico \texttt{contador}, esto me asegura que durante la ejecución de \texttt{maximum} cada $thread$ va a trabajar sobre una entrada diferente. Aún así, para asegurarnos de que no sea concurrente con \texttt{addAndInc} se debe hacer lock a todos las entradas de \texttt{mutexes} y unlock solo al terminar. 
+
 \subsection{Ejercicio 2}
-La función  \texttt{ConcurrentHashMap::count words(string arch)} es simplemente abrir el arhivo $arch$ e ir pasando los strings capturados a un \texttt{ConcurrentHashMap} usando la función \texttt{addAndInc}.
+En este punto no debíamos preocuparnos por la concurrencia. Así que la función  \texttt{count\_words(string arch)} es simplemente abrir el arhivo $arch$ e ir pasando los strings capturados a un \texttt{ConcurrentHashMap} haciendo uso de \texttt{addAndInc}.
 
-En lugar de hacer esto diréctamente, implementamos una función \texttt{meterEnMapa(ConcurrentHashMap* mapa,string arch)} que toma un puntero a \texttt{ConcurrentHashMap} y un archivo y hace lo descripto anteriormente. Esto es porque es algo que vamos a usar mucho. Luego, \texttt{ConcurrentHashMap::count words(string arch)} solo crea un \texttt{ConcurrentHashMap} $mapa$ y lo llena usando \texttt{meterEnMapa} antes de devolverlo.
-
-En este punto no debíamos preocuparnos por la concurrencia. 
+En lugar de hacer esto diréctamente, implementamos una función \texttt{meterEnMapa(ConcurrentHashMap* mapa,string arch)} que toma un puntero a \texttt{ConcurrentHashMap} y un archivo y hace lo descripto anteriormente. Esto es porque es algo que vamos a usar mucho. Luego, \texttt{count\_words(string arch)} solo crea un \texttt{ConcurrentHashMap} $mapa$ y lo llena usando \texttt{meterEnMapa} antes de devolverlo.
 
 \subsection{Ejercicio 3}
-Para este ejercicio se volvieron a definir una estructura y una función para ayudarnos. La estructura \texttt{WrapperCountWords1} consta de un puntero a \texttt{ConcurrentHashMap mapa} y un \texttt{string arch}. La función \texttt{void* threadCount\_words1(void* data)} castea $data$ a un puntero a \texttt{WrapperCountWords1} $wrap$ y luego llama a \texttt{meterEnMapa} con $wrap\rightarrow mapa$ y $wrap\rightarrow arch$ como parámetros.
+Para este ejercicio se volvieron a definir una estructura y una función para ayudarnos. La estructura \texttt{WrapperCountWords1} consta de un puntero a \texttt{ConcurrentHashMap mapa} y un \texttt{string arch}. La función \texttt{void* thread\_count\_words1(void* data)} castea $data$ a un puntero a \texttt{WrapperCountWords1} $wrap$ y luego llama a \texttt{meterEnMapa} con $wrap\rightarrow mapa$ y $wrap\rightarrow arch$ como parámetros.
 
-En \texttt{ConcurrentHashMap count\_words(list<string>archs)} incialmente creamos un nuevo \texttt{ConcurrentHashMap} $mapa$ y definimos un entero $nt$ como el largo de $archs$. Luego creamos un arreglo de \texttt{WrapperCountWords1} de $nt$ entradas, $wrap$, donde a cada entrada asignamos un elemento distinto de $archs$ y una referencia a $mapa$, y $nt$ $threads$ a los que les pasamos una entrada de $wrap$ y la función \texttt{threadCount\_words1} como punto de inicio. Finalmente, luego de esperar que todos los $threads$ terminen, devolvemos $mapa$.
+Usando la funció y la estructura recien definidas, el pseudocódigo de \texttt{count\_words} es el siguiente.
+
+\begin{algorithm}[H]
+\SetKwProg{Fn}{Función}{}{fin}
+
+\SetAlgoLined
+\Fn{count\_words($archs$)}{
+	$nt$ $\leftarrow$ largo de $archs$ \\
+	$mapa$ $\leftarrow$ nuevo \texttt{ConcurrentHashMap} \\
+	$wrap$ $\leftarrow$ arreglo de $nt$ \texttt{WrapperCountWords1} \\
+	\ForEach{entrada de $wrap$}{
+		asignarle un archivo disntinto de $archs$ y una referencia a $mapa$	
+	}
+	crear $nt$ threads y pasarle una entrada de $wrap$ y \texttt{thread\_count\_words1} como punto de inicio \\
+	esperar que terminen los $nt$ threads \\
+	devolver $mapa$
+}
+\caption{count\_words}
+\end{algorithm} 
+
 
 \subsection{Ejercicio 4}
 \subsection{Ejercicio 5}
