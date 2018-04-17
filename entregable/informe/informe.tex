@@ -238,6 +238,35 @@ Así, el pseudocódigo de \texttt{count\_words(unsigned int n, list<string>archs)}
 Notar que los $n$ threads comparten el mismo \texttt{ConcurrentHashMap}. Cada uno se encargará de un archivo diferente hasta que no queden más sin cargar en la lista como se vió en la función definida antes, y la contensión está cubierta por \texttt{addAndInc}.
 
 \subsection{Ejercicio 5}
+
+La estructura \texttt{Wrapper\_maximum} es similar a la anterior, consta de un puntero a \texttt{ConcurrentHashMap mapa}, uno a mutex \texttt{mutexLista}, y dos a iteradores de lista de string, \texttt{it} y \texttt{ends}. Básicamente, los que en la anterior eran iteradores, acá son punteros a los mismos.
+
+A su vez, la función auxiliar \texttt{thread\_maximum} es casi idéntica a \texttt{thread\_count\_words2}. La única diferencia es que al tratar con \texttt{it} y \texttt{ends}, hay que desreferenciarlos.
+
+El pseudocódigo de \texttt{maximum(unsigned int p\_archivos, unsigned int p\_maximos, list<string>archs)} es el siguiente:
+
+\begin{algorithm}[H]
+\SetKwProg{Fn}{Función}{}{fin}
+
+\SetAlgoLined
+\Fn{maximum($p\_archivosn$, $p\_maximos$, $archs$)}{
+	$wrap$ $\leftarrow$ arreglo de $p\_archivos$ \texttt{Wrapper\_maximums} \\
+	$mutexLista$ $\leftarrow$ nuevo mutex \\
+	$it$ $\leftarrow$ $archs$.begin \\
+	$ends$ $\leftarrow$ $archs$.end \\
+	\ForEach{entrada de $wrap$}{
+		asignarle direcciones de un nuevo \texttt{CHM}, $mutexLista$, $it$ y $ends$ \\
+	}
+	crear $p\_archivos$ threads con una referencia a un entrada de $wrap$ y a \texttt{thread\_maximum} \\
+	esperar que terminen los $p\_archivos$ threads \\
+	$mapa$ $\leftarrow$ nuevo \texttt{CHM} \\
+	$mapa$ $\leftarrow$ merge de los mapas en las entradas de $wrap$ \\
+	devolver $mapa$.\texttt{maimum}($p\_maximos$) \\
+}
+\caption{maximum}
+\end{algorithm}
+
+
 \subsection{Ejercicio 6}
 
 \section{Experimentación}
