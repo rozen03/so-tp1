@@ -68,7 +68,7 @@ El primer paso era completar la clase \texttt{ListaAtomica} entregada por la cát
 
 Para esta operación se crea un nuevo nodo con el valor pasado a como parámetro, $nuevo$, y se hace que apunte como siguiente al actual primer nodo, $head$. Acá faltaría solo asignar $nuevo$ a $head$ de modo que éste sea el actual primer nodo, pero podría pasar que entre la asignación de $nuevo\rightarrow next$ y este último paso alguien más haga un push\_front, no cumpliendo así la condición de que no haya peligro de $race$ $conditions$. Para resolver esto, se realiza esa asignación de la siguiente manera:
 
-while (not atomic\_compare\_exchange\_weak(\&$head$, \&$nuevo\rightarrow next$,$nuevo$))
+\texttt{while (not atomic\_compare\_exchange\_weak(\&$head$, \&$nuevo\rightarrow next$,$nuevo$))}
 
 La función dentro de la guarda se comporta así:
 \begin{itemize}
@@ -103,9 +103,9 @@ Para la función \texttt{void addAndInc(string key)} se debía garantizar contensi
 
 Para la función \texttt{bool member(string key)}, simplemente se obtiene $i$ de la misma forma que antes y se recorre la entrada correspondiente de \texttt{tabla} con un iterador, si el elemento está se devuelve True y en caso contrario se devuelve False.
 
-Para función \texttt{pair<string, unsigned int>maximum(unsigned int nt)} se definieron una una estructura y una función auxiliar, así que primero explicamos eso.
+Para la función \texttt{pair<string, unsigned int>maximum(unsigned int nt)} se definieron una una estructura y una función auxiliar, así que primero explicamos eso.
 
-Se definió antes una estructura \texttt{Busqueda}, compuesta por un un puntero a lista de par \texttt{mapa}, un entero atómico \texttt{contador}, un par \texttt{max} y un mutex \texttt{mtx\_max}. Para construir una instancia se inicia \texttt{contador} en 0, \texttt{max} en ($" "$, 0) y \texttt{mapa} como una copia de un puntero de lista de par pasada como parámetro.
+Se definió antes una estructura \texttt{Busqueda}, compuesta por un un puntero \texttt{ConcurrentHashMap} \texttt{mapa}, un entero atómico \texttt{contador}, un par \texttt{max} y un mutex \texttt{mtx\_max}. 
 
 También se definió la función \texttt{void* buscador(void* data)}, cuyo pseudocódigo es el siguiente.
 
@@ -124,11 +124,11 @@ También se definió la función \texttt{void* buscador(void* data)}, cuyo pseudocó
 		actualizar $max$ con ese elemento		
 		}
 	}
-	$busqueda$.\texttt{mtx\_max}.lock \\
-	\If{el valor de $max$ es mayor que el del $busqueda$.max}{
-		$busqueda$.max $\leftarrow$ $max$ \\
+	$busqueda.mtx\_max$.lock \\
+	\If{el valor de $max$ es mayor que el del $busqueda.max$}{
+		$busqueda.max$ $\leftarrow$ $max$ \\
 	}
-	$busqueda$.\texttt{mtx\_max}.unlock \\
+	$busqueda.mtx\_max$.unlock \\
 }
 \caption{buscador}
 \end{algorithm} 
@@ -143,8 +143,11 @@ Ahora, haciendo uso de la estructura y la función mencionadas, el pseudocódigo d
 \SetAlgoLined
 \Fn{maximum($nt$)}{
 	lock a todas las entradas de \texttt{mutexes} \\
-	$busqueda$ $\leftarrow$ puntero a \texttt{Busqueda} construida de \texttt{tabla} \\
-	crear $nt$ threads y pasarles $busqueda$ y \texttt{buscador} como punto de inicio \\
+	$busqueda$ $\leftarrow$ nueva \texttt{Busqueda} \\
+	$busqueda.mapa$ $\leftarrow$ \texttt{tabla} \\
+	$busqueda.contador$ $\leftarrow$ \texttt{0} \\
+	$busqueda.max$ $\leftarrow$ \texttt{($""$, 0)} \\
+	crear $nt$ threads y pasarles $busqueda$ y la función \texttt{buscador} como punto de inicio \\
 	esperar que terminen los $nt$ threads \\
 	unlock a todas las entradas de \texttt{mutexes} \\
 	devolver $busqueda.max$
@@ -160,9 +163,9 @@ En este punto no debíamos preocuparnos por la concurrencia. Así que la función  
 En lugar de hacer esto diréctamente, implementamos una función \texttt{meterEnMapa(ConcurrentHashMap* mapa,string arch)} que toma un puntero a \texttt{ConcurrentHashMap} y un archivo y hace lo descripto anteriormente. Esto es porque es algo que vamos a usar mucho. Luego, \texttt{count\_words(string arch)} solo crea un \texttt{ConcurrentHashMap} $mapa$ y lo llena usando \texttt{meterEnMapa} antes de devolverlo.
 
 \subsection{Ejercicio 3}
-Para este ejercicio se volvieron a definir una estructura y una función para ayudarnos. La estructura \texttt{WrapperCountWords1} consta de un puntero a \texttt{ConcurrentHashMap mapa} y un \texttt{string arch}. La función \texttt{void* thread\_count\_words1(void* data)} castea $data$ a un puntero a \texttt{WrapperCountWords1} $wrap$ y luego llama a \texttt{meterEnMapa} con $wrap\rightarrow mapa$ y $wrap\rightarrow arch$ como parámetros.
+Para este ejercicio se volvieron a definir una estructura y una función para ayudarnos. La estructura \texttt{Wrapper\_count\_words1} consta de un puntero a \texttt{ConcurrentHashMap mapa} y un \texttt{string arch}. La función \texttt{void* thread\_count\_words1(void* data)} castea $data$ a un puntero a \texttt{Wrapper\_count\_words1} $wrap$ y luego llama a \texttt{meterEnMapa} con $wrap\rightarrow mapa$ y $wrap\rightarrow arch$ como parámetros.
 
-Usando la funció y la estructura recien definidas, el pseudocódigo de \texttt{count\_words} es el siguiente.
+Usando la función y la estructura recien definidas, el pseudocódigo de \texttt{count\_words} es el siguiente.
 
 \begin{algorithm}[H]
 \SetKwProg{Fn}{Función}{}{fin}
@@ -171,9 +174,9 @@ Usando la funció y la estructura recien definidas, el pseudocódigo de \texttt{co
 \Fn{count\_words($archs$)}{
 	$nt$ $\leftarrow$ largo de $archs$ \\
 	$mapa$ $\leftarrow$ nuevo \texttt{ConcurrentHashMap} \\
-	$wrap$ $\leftarrow$ arreglo de $nt$ \texttt{WrapperCountWords1} \\
+	$wrap$ $\leftarrow$ arreglo de $nt$ \texttt{Wrapper\_count\_words1} \\
 	\ForEach{entrada de $wrap$}{
-		asignarle un archivo disntinto de $archs$ y una referencia a $mapa$	
+		asignarle un archivo disntinto de $archs$ y la dirección de $mapa$	
 	}
 	crear $nt$ threads y pasarle una entrada de $wrap$ y \texttt{thread\_count\_words1} como punto de inicio \\
 	esperar que terminen los $nt$ threads \\
@@ -184,6 +187,56 @@ Usando la funció y la estructura recien definidas, el pseudocódigo de \texttt{co
 
 
 \subsection{Ejercicio 4}
+Se definió la estructura \texttt{Wrapper\_count\_words2}, que consta de un puntero a \texttt{ConcurrentHashMap mapa}, un puntero a mutex \texttt{mutexLista} y dos iteradores de lista de string, \texttt{it} y \texttt{ends}.
+
+La función \texttt{thread\_count\_words2} tiene el siguiente pseudocodigo:
+
+\begin{algorithm}[H]
+\SetKwProg{Fn}{Función}{}{fin}
+
+\SetAlgoLined
+\Fn{thread\_count\_words2($data$)}{
+	$wrap$ $\leftarrow$ $data$ como puntero a \texttt{Wrapper\_count\_words2} \\
+	$arch$ $\leftarrow$ nuevo string \\
+	\While{true}{
+		$wrap.mutexLista$.lock \\
+		\If{$wrap.it$ == $wrap.ends$}{
+			$wrap.mutexLista$.unlock \\
+			terminar	
+		}
+		$arch$ $\leftarrow$ $wrap.it$ \\
+		$wrap.it$++ \\
+		$wrap.mutexLista$.unlock \\
+		\texttt{meterEnMapa}($wrap.mapa$, $arch$) \\
+	}
+}
+\caption{thread\_count\_words2}
+\end{algorithm}
+
+Esta será la función con la que iniciemos los $threads$ de este punto. Usamos los iteradores $it$ y $ends$ para saber cuando se han tomado todos los archivos de la lista, siendo $it$ el que apunta al siguiente archivo aún no tomado y $ends$ el final de la lista. La modificación de estos iteradores está contenida con $locking$ usando el mutex de \texttt{Wrapper\_count\_words2}.
+
+Así, el pseudocódigo de \texttt{count\_words(unsigned int n, list<string>archs)} es el siguiente:
+
+\begin{algorithm}[H]
+\SetKwProg{Fn}{Función}{}{fin}
+
+\SetAlgoLined
+\Fn{count\_words($n$, $archs$)}{
+	$mapa$ $\leftarrow$ nuevo \texttt{ConcurrentHashMap} \\
+	$wrap$ $\leftarrow$ nuevo \texttt{Wrapper\_count\_words2} \\
+	$wrap.mapa$ $\leftarrow$ dirección de $mapa$ \\
+	$wrap.mutexLista$ $\leftarrow$ nuevo mutex \\
+	$wrap.it$ $\leftarrow$ $archs$.begin \\
+	$wrap.it$ $\leftarrow$ $archs$.end \\
+	crear $n$ threads con una referencia a $wrap$ y la función \texttt{thread\_count\_words2} como punto de inicio
+	esperar que que terminen los $n$ threads
+	devolver $mapa$
+}
+\caption{count\_words3?(no se como diferenciarla de las otras sin poner la signatura)}
+\end{algorithm}
+
+Notar que los $n$ threads comparten el mismo \texttt{ConcurrentHashMap}. Cada uno se encargará de un archivo diferente hasta que no queden más sin cargar en la lista como se vió en la función definida antes, y la contensión está cubierta por \texttt{addAndInc}.
+
 \subsection{Ejercicio 5}
 \subsection{Ejercicio 6}
 
