@@ -9,43 +9,13 @@
 #include <pthread.h>
 #include <fstream>
 #include <list>
+#include <time.h>
+
+#define  EXP
+
 using namespace std;
 
 typedef pair<string, unsigned int> par;
-
-struct Busqueda {
-	Busqueda(Lista<par>* mapa) {
-		contador.store(0);
-		_mapa = mapa;
-		max = make_pair("", 0);
-	}
-	Lista<par>* _mapa;
-	atomic<int> contador;
-	par max;
-	mutex mtx_max;
-};
-void * buscador(void* data) {
-	Busqueda* busqueda = (Busqueda*) data;
-	par max("", 0);
-	while (true) {
-		int i = busqueda->contador++;
-		if (i >= 26) break;
-		auto it = busqueda->_mapa[i].CrearIt();
-		while (it.HaySiguiente()) {
-			if (it.Siguiente().second > max.second) {
-				max = it.Siguiente();
-			}
-			it.Avanzar();
-		}
-	}
-
-	busqueda->mtx_max.lock();
-	if (max.second > busqueda->max.second)
-		busqueda->max = max;
-	busqueda->mtx_max.unlock();
-
-	return NULL;
-}
 
 class ConcurrentHashMap {
 public:
@@ -115,6 +85,34 @@ public:
 		return it.HaySiguiente();
 	}
 
+	struct Busqueda {
+		ConcurrentHashMap* mapa;
+		atomic<int> contador;
+		par max;
+		mutex mtx_max;
+	};
+	static void * buscador(void* data) {
+		Busqueda* busqueda = (Busqueda*) data;
+		par max("", 0);
+		while (true) {
+			int i = busqueda->contador++;
+			if (i >= 26) break;
+			auto it = busqueda->mapa->tabla[i]->CrearIt();
+			while (it.HaySiguiente()) {
+				if (it.Siguiente().second > max.second) {
+					max = it.Siguiente();
+				}
+				it.Avanzar();
+			}
+		}
+
+		busqueda->mtx_max.lock();
+		if (max.second > busqueda->max.second)
+			busqueda->max = max;
+		busqueda->mtx_max.unlock();
+
+		return NULL;
+	}
 	// Devuelve el par (k, m) tal que k es la clave con máxima cantidad de apariciones y m es ese valor.
 	// No puede ser concurrente con addAndInc, sı́ con member, y tiene que ser implementada con concurrencia interna.
 	// El parámetro nt indica la cantidad de threads a utilizar.
@@ -123,11 +121,14 @@ public:
 		for (size_t i = 0; i < 26; i++) {
 			mutexes[i].lock();
 		}
-		Busqueda* busqueda = new Busqueda(*this->tabla);
+		Busqueda busqueda;
+		busqueda.mapa = this;
+		busqueda.contador.store(0);
+		busqueda.max = make_pair("", 0);
 		pthread_t thread[nt];
 		long long unsigned int tid;
 		for (tid = 0; tid < nt; ++tid) {
-			pthread_create(&thread[tid], NULL, buscador,  busqueda);
+			pthread_create(&thread[tid], NULL, buscador,  &busqueda);
 		}
 		for (tid = 0; tid < nt; ++tid) {
 			pthread_join(thread[tid], NULL);
@@ -135,7 +136,7 @@ public:
 		for (size_t i = 0; i < 26; i++) {
 			mutexes[i].unlock();
 		}
-		return busqueda->max;
+		return busqueda.max;
 	}
 
 	static ConcurrentHashMap count_words(string arch);
@@ -161,7 +162,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(string arch) {
 }
 
 
-struct Wrapper_count_words1{
+struct Wrapper_count_words1 {
 	ConcurrentHashMap* mapa;
 	string arch;
 };
@@ -189,11 +190,11 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string>archs) {
 	return mapa;
 }
 
-struct Wrapper_count_words2{
-    ConcurrentHashMap* mapa;
-    mutex *mutexLista;
-    list<string>::iterator it;
-    list<string>::iterator ends;
+struct Wrapper_count_words2 {
+	ConcurrentHashMap* mapa;
+	mutex *mutexLista;
+	list<string>::iterator it;
+	list<string>::iterator ends;
 };
 // Funcion thread para count_words(unsigned int n,list<string>archs)
 void * thread_count_words2(void * data) {
@@ -230,9 +231,95 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n,list<string>arch
 	return mapa;
 }
 
-//TODO: Cambiar nombre? (Este es el ej6)
+struct Wrapper_maximum {
+	ConcurrentHashMap* mapa;
+	mutex *mutexLista;
+	list<string>::iterator* it;
+	list<string>::iterator* ends;
+};
+// Funcion thread para maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs)
+void * thread_maximum(void * data) {
+	Wrapper_maximum* wrap = (Wrapper_maximum*)data;
+	string arch;
+	while(true){
+		wrap->mutexLista->lock();
+		if (*(wrap->it) == *(wrap->ends)) {
+			wrap->mutexLista->unlock();
+			break;
+		}
+		arch = **wrap->it;
+		(*wrap->it)++;
+		wrap->mutexLista->unlock();
+		meterEnMapa(wrap->mapa, arch);
+	}
+	return NULL;
+}
+pair<string, unsigned int> ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos, list<string>archs) {
+	#ifdef  EXP
+		struct timespec t_start, t_med, t_end;
+		clock_gettime(CLOCK_MONOTONIC, &t_start);
+	#endif
+
+	pthread_t thread[p_archivos];
+	int tid = 0;
+	Wrapper_maximum wrap[p_archivos];
+	mutex mutexLista;
+	list<string>::iterator it = archs.begin();
+	list<string>::iterator ends = archs.end();
+	for (tid = 0; tid < p_archivos; ++tid){
+		wrap[tid].mapa = new ConcurrentHashMap;
+		wrap[tid].mutexLista = &mutexLista;
+		wrap[tid].it = &it;
+		wrap[tid].ends = &ends;
+		pthread_create(&thread[tid], NULL, thread_maximum,  &wrap[tid]);
+	}
+	for (tid = 0; tid < p_archivos; ++tid){
+		pthread_join(thread[tid], NULL);
+	}
+
+	#ifdef  EXP
+		clock_gettime(CLOCK_MONOTONIC, &t_med);
+		cerr <<	((t_med.tv_sec*1000000000 + t_med.tv_nsec) -
+			(t_start.tv_sec*1000000000 + t_start.tv_nsec));
+		cerr << ",";
+	#endif
+
+	// Merge de los mapas
+	ConcurrentHashMap mapa;
+	for (int i = 0; i < p_archivos; i++) {
+		for (int j = 0; j < 26; j++) {
+			for (auto it = wrap[i].mapa->tabla[j]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
+				for (int k = 0; k < it.Siguiente().second; k++) {
+					mapa.addAndInc(it.Siguiente().first);
+				}
+			}
+		}
+	}
+
+	#ifdef  EXP
+		clock_gettime(CLOCK_MONOTONIC, &t_end);
+		cerr <<	((t_end.tv_sec*1000000000 + t_end.tv_nsec) -
+			(t_med.tv_sec*1000000000 + t_med.tv_nsec));
+	#endif
+
+	return mapa.maximum(p_maximos);
+}
+
 pair<string, unsigned int> ConcurrentHashMap::maximum2(unsigned int p_archivos, unsigned int p_maximos, list<string>archs) {
-	return count_words(p_archivos, archs).maximum(p_maximos);
+	#ifdef  EXP
+		struct timespec t_start, t_end;
+		clock_gettime(CLOCK_MONOTONIC, &t_start);
+	#endif
+
+	ConcurrentHashMap mapa =  count_words(p_archivos, archs);
+
+	#ifdef  EXP
+		clock_gettime(CLOCK_MONOTONIC, &t_end);
+		cerr <<  ((t_end.tv_sec*1000000000 + t_end.tv_nsec) -
+				 (t_start.tv_sec*1000000000 + t_start.tv_nsec));
+	#endif
+
+	return  mapa.maximum(p_maximos);
 }
 
 

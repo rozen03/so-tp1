@@ -3,7 +3,7 @@
 .SUFFIXES: .o .cpp .hpp
 
 CXX = g++
-CXXFLAGS = -std=c++11 -O3
+CXXFLAGS = -std=c++11
 LDLIBS = -lpthread -lrt
 
 .cpp.o:
@@ -51,7 +51,11 @@ test-5-run: test-5
 	done; done
 	rm -f corpus-max corpus-[0-4]
 
+exp: $(OBJ) exp.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ exp.cpp $(OBJ) $(LDLIBS)
+
 clean:
 	rm -f $(BIN) $(OBJ)
 	rm -f corpus-*
 	rm -f mitest
+	rm -f exp
