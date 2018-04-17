@@ -114,10 +114,10 @@ También se definió la función \texttt{void* buscador(void* data)}, cuyo pseudocó
 
 \SetAlgoLined
 \Fn{buscador(data)}{
-	\texttt{busqueda $\leftarrow$ data}como puntero a \texttt{Busqueda} \\
+	\texttt{busqueda} $\leftarrow$ \texttt{data} como puntero a \texttt{Busqueda} \\
 	\texttt{max} $\leftarrow$ \texttt{($``"$, 0)} \\
 	\While{\texttt{true}} {
-		\texttt{i $\leftarrow$ busqueda.contador++} \\
+		\texttt{i} $\leftarrow$ \texttt{busqueda.contador++} \\
 		\If{\texttt{i} $> 25$} {terminar}	
 		iterar \texttt{busqueda.mapa[i]}\\
 		\If{algún elemento tiene valor mayor al valor de \texttt{max}}{
@@ -126,7 +126,7 @@ También se definió la función \texttt{void* buscador(void* data)}, cuyo pseudocó
 	}
 	\texttt{busqueda.mtx\_max.lock} \\
 	\If{el valor de \texttt{max} es mayor que el del \texttt{busqueda.max}}{
-		\texttt{busqueda.max $\leftarrow$ max} \\
+		\texttt{busqueda.max} $\leftarrow$ \texttt{max} \\
 	}
 	\texttt{busqueda.mtx\_max.unlock} \\
 }
@@ -144,7 +144,7 @@ Ahora, haciendo uso de la estructura y la función mencionadas, el pseudocódigo d
 \Fn{maximum(nt)}{
 	lock a todas las entradas de \texttt{mutexes} \\
 	\texttt{busqueda} $\leftarrow$ nueva \texttt{Busqueda} \\
-	\texttt{busqueda.mapa} $\leftarrow$ \texttt{tabla} \\
+	\texttt{busqueda.mapa} $\leftarrow$ \texttt{this} \\
 	\texttt{busqueda.contador} $\leftarrow$ \texttt{0} \\
 	\texttt{busqueda.max} $\leftarrow$ \texttt{($``"$, 0)} \\
 	crear \texttt{nt} threads y pasarles \texttt{busqueda} y la función \texttt{buscador} como punto de inicio \\
@@ -158,12 +158,12 @@ Ahora, haciendo uso de la estructura y la función mencionadas, el pseudocódigo d
 Este ejercicio pedía concurrencia interna, la cual se logra usando el entero atómico \texttt{contador}, esto me asegura que durante la ejecución de \texttt{maximum} cada $thread$ va a trabajar sobre una entrada diferente. Aún así, para asegurarnos de que no sea concurrente con \texttt{addAndInc} se debe hacer lock a todos las entradas de \texttt{mutexes} y unlock solo al terminar. 
 
 \subsection{Ejercicio 2}
-En este punto no debíamos preocuparnos por la concurrencia. Así que la función  \texttt{count\_words(string arch)} es simplemente abrir el arhivo $arch$ e ir pasando los strings capturados a un \texttt{ConcurrentHashMap} haciendo uso de \texttt{addAndInc}.
+En este punto no debíamos preocuparnos por la concurrencia. Así que la función  \texttt{count\_words(string arch)} es simplemente abrir el arhivo \texttt{arch} e ir pasando los strings capturados a un \texttt{ConcurrentHashMap} haciendo uso de \texttt{addAndInc}.
 
-En lugar de hacer esto diréctamente, implementamos una función \texttt{meterEnMapa(ConcurrentHashMap* mapa,string arch)} que toma un puntero a \texttt{ConcurrentHashMap} y un archivo y hace lo descripto anteriormente. Esto es porque es algo que vamos a usar mucho. Luego, \texttt{count\_words(string arch)} solo crea un \texttt{ConcurrentHashMap} $mapa$ y lo llena usando \texttt{meterEnMapa} antes de devolverlo.
+En lugar de hacer esto directamente, implementamos una función \texttt{meterEnMapa(ConcurrentHashMap* mapa, string arch)} que toma un puntero a \texttt{ConcurrentHashMap} y un archivo y hace lo descripto anteriormente. Esto es porque es algo que vamos a usar mucho. Luego, \texttt{count\_words(string arch)} solo crea un \texttt{ConcurrentHashMap} \texttt{mapa} y lo llena usando \texttt{meterEnMapa} antes de devolverlo.
 
 \subsection{Ejercicio 3}
-Para este ejercicio se volvieron a definir una estructura y una función para ayudarnos. La estructura \texttt{Wrapper\_count\_words1} consta de un puntero a \texttt{ConcurrentHashMap mapa} y un \texttt{string arch}. La función \texttt{void* thread\_count\_words1(void* data)} castea $data$ a un puntero a \texttt{Wrapper\_count\_words1} $wrap$ y luego llama a \texttt{meterEnMapa} con $wrap\rightarrow mapa$ y $wrap\rightarrow arch$ como parámetros.
+Para este ejercicio se volvieron a definir una estructura y una función para ayudarnos. La estructura \texttt{Wrapper\_count\_words1} consta de un puntero a \texttt{ConcurrentHashMap mapa} y un \texttt{string arch}. La función \texttt{void* thread\_count\_words1(void* data)} castea \texttt{data} a un puntero a \texttt{Wrapper\_count\_words1} \texttt{wrap} y luego llama a \texttt{meterEnMapa} con \texttt{wrap$\rightarrow$mapa} y \texttt{wrap$\rightarrow$arch} como parámetros.
 
 Usando la función y la estructura recien definidas, el pseudocódigo de \texttt{count\_words} es el siguiente.
 
@@ -171,20 +171,21 @@ Usando la función y la estructura recien definidas, el pseudocódigo de \texttt{c
 \SetKwProg{Fn}{Función}{}{fin}
 
 \SetAlgoLined
-\Fn{count\_words($archs$)}{
-	$nt$ $\leftarrow$ largo de $archs$ \\
-	$mapa$ $\leftarrow$ nuevo \texttt{ConcurrentHashMap} \\
-	$wrap$ $\leftarrow$ arreglo de $nt$ \texttt{Wrapper\_count\_words1} \\
-	\ForEach{entrada de $wrap$}{
-		asignarle un archivo disntinto de $archs$ y la dirección de $mapa$	
+\Fn{count\_words(archs)}{
+	\texttt{nt} $\leftarrow$ largo de \texttt{archs} \\
+	\texttt{mapa} $\leftarrow$ nuevo \texttt{ConcurrentHashMap} \\
+	\texttt{wrap} $\leftarrow$ arreglo de \texttt{nt} \texttt{Wrapper\_count\_words1} \\
+	\ForEach{entrada de \texttt{wrap}}{
+		asignarle un archivo disntinto de \texttt{archs} y la dirección de \texttt{mapa}	
 	}
-	crear $nt$ threads y pasarle una entrada de $wrap$ y \texttt{thread\_count\_words1} como punto de inicio \\
-	esperar que terminen los $nt$ threads \\
-	devolver $mapa$
+	crear \texttt{nt} threads y pasarle una entrada de \texttt{wrap} y \texttt{thread\_count\_words1} como punto de inicio \\
+	esperar que terminen los \texttt{nt} threads \\
+	devolver \texttt{mapa}
 }
-\caption{count\_words}
+\caption{count\_words del Ejercicio 3}
 \end{algorithm} 
 
+Cada $thread$ tiene en su \texttt{wrap} un archivo distinto, pero todos tienen el mismo \texttt{mapa}, por lo que al final éste contiene los datos de todos los archivos.
 
 \subsection{Ejercicio 4}
 Se definió la estructura \texttt{Wrapper\_count\_words2}, que consta de un puntero a \texttt{ConcurrentHashMap mapa}, un puntero a mutex \texttt{mutexLista} y dos iteradores de lista de string, \texttt{it} y \texttt{ends}.
@@ -196,24 +197,24 @@ La función \texttt{thread\_count\_words2} tiene el siguiente pseudocodigo:
 
 \SetAlgoLined
 \Fn{thread\_count\_words2($data$)}{
-	$wrap$ $\leftarrow$ $data$ como puntero a \texttt{Wrapper\_count\_words2} \\
-	$arch$ $\leftarrow$ nuevo string \\
+	\texttt{wrap} $\leftarrow$ \texttt{data} como puntero a \texttt{Wrapper\_count\_words2} \\
+	\texttt{arch} $\leftarrow$ nuevo string \\
 	\While{true}{
-		$wrap.mutexLista$.lock \\
-		\If{$wrap.it$ == $wrap.ends$}{
-			$wrap.mutexLista$.unlock \\
+		\texttt{wrap.mutexLista.lock} \\
+		\If{\texttt{wrap.it} == \texttt{wrap.ends}}{
+			\texttt{wrap.mutexLista.unlock} \\
 			terminar	
 		}
-		$arch$ $\leftarrow$ $wrap.it$ \\
-		$wrap.it$++ \\
-		$wrap.mutexLista$.unlock \\
-		\texttt{meterEnMapa}($wrap.mapa$, $arch$) \\
+		\texttt{arch} $\leftarrow$ \texttt{wrap.it} \\
+		\texttt{wrap.it++} \\
+		\texttt{wrap.mutexLista.unlock} \\
+		\texttt{meterEnMapa(wrap.mapa, arch)} \\
 	}
 }
 \caption{thread\_count\_words2}
 \end{algorithm}
 
-Esta será la función con la que iniciemos los $threads$ de este punto. Usamos los iteradores $it$ y $ends$ para saber cuando se han tomado todos los archivos de la lista, siendo $it$ el que apunta al siguiente archivo aún no tomado y $ends$ el final de la lista. La modificación de estos iteradores está contenida con $locking$ usando el mutex de \texttt{Wrapper\_count\_words2}.
+Esta será la función con la que iniciemos los $threads$ de este punto. Usamos los iteradores \texttt{it} y \texttt{ends} para saber cuando se han tomado todos los archivos de la lista, siendo \texttt{it} el que apunta al siguiente archivo aún no tomado y \texttt{ends} el final de la lista. La modificación de estos iteradores está contenida con $locking$ usando el mutex de \texttt{Wrapper\_count\_words2}.
 
 Así, el pseudocódigo de \texttt{count\_words(unsigned int n, list<string>archs)} es el siguiente:
 
@@ -222,24 +223,24 @@ Así, el pseudocódigo de \texttt{count\_words(unsigned int n, list<string>archs)}
 
 \SetAlgoLined
 \Fn{count\_words($n$, $archs$)}{
-	$mapa$ $\leftarrow$ nuevo \texttt{ConcurrentHashMap} \\
-	$wrap$ $\leftarrow$ nuevo \texttt{Wrapper\_count\_words2} \\
-	$wrap.mapa$ $\leftarrow$ dirección de $mapa$ \\
-	$wrap.mutexLista$ $\leftarrow$ nuevo mutex \\
-	$wrap.it$ $\leftarrow$ $archs$.begin \\
-	$wrap.it$ $\leftarrow$ $archs$.end \\
-	crear $n$ threads con una referencia a $wrap$ y la función \texttt{thread\_count\_words2} como punto de inicio
-	esperar que que terminen los $n$ threads
-	devolver $mapa$
+	\texttt{mapa} $\leftarrow$ nuevo \texttt{ConcurrentHashMap} \\
+	\texttt{wrap} $\leftarrow$ nuevo \texttt{Wrapper\_count\_words2} \\
+	\texttt{wrap.mapa} $\leftarrow$ dirección de \texttt{mapa} \\
+	\texttt{wrap.mutexLista} $\leftarrow$ nuevo mutex \\
+	\texttt{wrap.it} $\leftarrow$ \texttt{archs.begin} \\
+	\texttt{wrap.ends} $\leftarrow$ \texttt{archs.end} \\
+	crear \texttt{n} threads con el puntero a \texttt{wrap} y la función \texttt{thread\_count\_words2} como punto de inicio \\
+	esperar que que terminen los \texttt{n} threads \\
+	devolver \texttt{mapa}
 }
-\caption{count\_words3?(no se como diferenciarla de las otras sin poner la signatura)}
+\caption{count\_words del Ejercicio 4}
 \end{algorithm}
 
-Notar que los $n$ threads comparten el mismo \texttt{ConcurrentHashMap}. Cada uno se encargará de un archivo diferente hasta que no queden más sin cargar en la lista como se vió en la función definida antes, y la contensión está cubierta por \texttt{addAndInc}.
+Notar que los \texttt{n} threads comparten el mismo \texttt{ConcurrentHashMap}. Cada uno se encargará de archivos diferentes (gracias a \texttt{mutexLista}) hasta que no queden más sin cargar en la lista como se vió en la función definida antes, y la contensión está cubierta por \texttt{addAndInc}.
 
 \subsection{Ejercicio 5}
 
-La estructura \texttt{Wrapper\_maximum} es similar a la anterior, consta de un puntero a \texttt{ConcurrentHashMap mapa}, uno a mutex \texttt{mutexLista}, y dos a iteradores de lista de string, \texttt{it} y \texttt{ends}. Básicamente, los que en la anterior eran iteradores, acá son punteros a los mismos.
+La estructura \texttt{Wrapper\_maximum} es similar a la anterior, consta de un puntero a \texttt{ConcurrentHashMap mapa}, uno a mutex \texttt{mutexLista}, y dos a iteradores de lista de string, \texttt{it} y \texttt{ends}. Básicamente, los que en la anterior eran iteradores, acá son punteros a los mismos. Esto lo hicimos de esta manera porque cada $thread$ va a armar un \texttt{mapa} distinto, así que cada uno trabaja con un \texttt{wrap} distitno, por lo que necesitamos que lo que pasamos punteros a los iteradores para que todos compartan lo mismo (y así nos aseguramos de que carguen archivos distintos).
 
 A su vez, la función auxiliar \texttt{thread\_maximum} es casi idéntica a \texttt{thread\_count\_words2}. La única diferencia es que al tratar con \texttt{it} y \texttt{ends}, hay que desreferenciarlos.
 
@@ -249,23 +250,24 @@ El pseudocódigo de \texttt{maximum(unsigned int p\_archivos, unsigned int p\_max
 \SetKwProg{Fn}{Función}{}{fin}
 
 \SetAlgoLined
-\Fn{maximum($p\_archivosn$, $p\_maximos$, $archs$)}{
-	$wrap$ $\leftarrow$ arreglo de $p\_archivos$ \texttt{Wrapper\_maximums} \\
-	$mutexLista$ $\leftarrow$ nuevo mutex \\
-	$it$ $\leftarrow$ $archs$.begin \\
-	$ends$ $\leftarrow$ $archs$.end \\
-	\ForEach{entrada de $wrap$}{
-		asignarle direcciones de un nuevo \texttt{CHM}, $mutexLista$, $it$ y $ends$ \\
+\Fn{maximum(p\_archivos, p\_maximos, archs)}{
+	\texttt{wrap} $\leftarrow$ arreglo de \texttt{p\_archivos} \texttt{Wrapper\_maximums} \\
+	\texttt{mutexLista} $\leftarrow$ nuevo mutex \\
+	\texttt{it} $\leftarrow$ \texttt{archs.begin} \\
+	\texttt{ends} $\leftarrow$ \texttt{archs.end} \\
+	\ForEach{entrada de \texttt{wrap}}{
+		asignarle direcciones de un nuevo \texttt{CHM}, \texttt{mutexList}, \texttt{it} y \texttt{ends} \\
 	}
-	crear $p\_archivos$ threads con una referencia a un entrada de $wrap$ y a \texttt{thread\_maximum} \\
-	esperar que terminen los $p\_archivos$ threads \\
-	$mapa$ $\leftarrow$ nuevo \texttt{CHM} \\
-	$mapa$ $\leftarrow$ merge de los mapas en las entradas de $wrap$ \\
-	devolver $mapa$.\texttt{maimum}($p\_maximos$) \\
+	crear \texttt{p\_archivos} threads con una referencia a un entrada de \texttt{wrap} y a \texttt{thread\_maximum} \\
+	esperar que terminen los \texttt{p\_archivos} threads \\
+	\texttt{mapa} $\leftarrow$ nuevo \texttt{CHM} \\
+	\texttt{mapa} $\leftarrow$ merge de los mapas en las entradas de \texttt{wrap} \\
+	devolver \texttt{mapa.\texttt{maximum}(p\_maximos)} \\
 }
 \caption{maximum}
 \end{algorithm}
 
+Como cada uno de los \texttt{p\_archivos} $threads$ arma su propio mapa, es necesario fusionar todos en uno solo para buscarle el máximo. Esto se hace recorriendo todas los pares de todas las entradas de cada \texttt{tabla}. Por cada par \texttt{(key, k)} recorrido se aplica \texttt{k} veces \texttt{addAndInc(key)} a \texttt{mapa}.
 
 \subsection{Ejercicio 6}
 
@@ -275,12 +277,14 @@ Para este ejercicio había que repetir la funcionalidad del anterior usando la ve
 \SetKwProg{Fn}{Función}{}{fin}
 
 \SetAlgoLined
-\Fn{maximum2($p\_archivosn$, $p\_maximos$, $archs$)}{
-	$mapa$ $\leftarrow$ \texttt{count\_words}($p\_archivos$, $archs$) \\
-	devolver $mapa$.\texttt{maimum}($p\_maximos$) \\
+\Fn{maximum2(p\_archivosn, p\_maximos, archs)}{
+	\texttt{mapa} $\leftarrow$ \texttt{count\_words(p\_archivos, archs)} \\
+	devolver \texttt{mapa.maximum(p\_maximos)} \\
 }
 \caption{maximum2}
 \end{algorithm}
+
+En este ejercicio se pide además hacer una comparación con la implementación del ejercicio 5. La experimentación de esto se presenta en la siguiente sección.
 
 \section{Experimentación}
 
