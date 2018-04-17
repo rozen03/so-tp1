@@ -269,6 +269,19 @@ El pseudocódigo de \texttt{maximum(unsigned int p\_archivos, unsigned int p\_max
 
 \subsection{Ejercicio 6}
 
+Para este ejercicio había que repetir la funcionalidad del anterior usando la versión concurrente de \texttt{count\_words}, por lo que su código es muy simple.
+
+\begin{algorithm}[H]
+\SetKwProg{Fn}{Función}{}{fin}
+
+\SetAlgoLined
+\Fn{maximum2($p\_archivosn$, $p\_maximos$, $archs$)}{
+	$mapa$ $\leftarrow$ \texttt{count\_words}($p\_archivos$, $archs$) \\
+	devolver $mapa$.\texttt{maimum}($p\_maximos$) \\
+}
+\caption{maximum2}
+\end{algorithm}
+
 \section{Experimentación}
 
 \newpage
