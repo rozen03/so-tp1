@@ -44,14 +44,16 @@ entregable/corpus-3
 entregable/corpus-4
 entregable/corpus-max
 entregable/corpus-post
+entregable/exp/words/words-*
 
 entregable/test-2
 entregable/test-3
 entregable/test-5
+entregable/exp/exp
 
 *.aux
 *.log
 *.gz
 *.toc
 
-entregable/\.ipynb_checkpoints/
+entregable/exp/\.ipynb_checkpoints/

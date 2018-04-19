@@ -51,11 +51,11 @@ test-5-run: test-5
 	done; done
 	rm -f corpus-max corpus-[0-4]
 
-exp: $(OBJ) exp.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ exp.cpp $(OBJ) $(LDLIBS)
+exp: $(OBJ) exp/exp.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o exp/$@ exp/exp.cpp $(OBJ) $(LDLIBS)
 
 clean:
 	rm -f $(BIN) $(OBJ)
 	rm -f corpus-*
 	rm -f mitest
-	rm -f exp
+	rm -f exp/exp
