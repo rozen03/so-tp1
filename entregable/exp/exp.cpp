@@ -5,16 +5,10 @@
 
 using namespace std;
 
-// argv[1] = 1 -> archivos distintos
-// argv[1] = 2 -> archivos iguales
 int main(int argc, char **argv) {
 	list<string> l;
 	for (int i = 0; i < ARCHIVOS; i ++) {
-		if (stoi(argv[1]) == 1) {
-			l.push_back("words/words-"+to_string(i)+".txt");
-		} else {
-			l.push_back("words/words-0.txt");
-		}
+		l.push_back("words/words-"+to_string(i)+".txt");
 	}
 
 	//p_archivos,ej5-load,ej5-merge,ej6
