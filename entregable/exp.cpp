@@ -8,7 +8,7 @@ using namespace std;
 int main(int argc, char **argv) {
 	list<string> l;
 	for (int i = 0; i < ARCHIVOS; i ++) {
-		l.push_back("corpus");
+		l.push_back("generadores/words-"+to_string(i)+".txt");
 	}
 
 	//p_archivos,ej5-load,ej5-merge,ej6
