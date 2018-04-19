@@ -44,7 +44,7 @@
 \titulo{Trabajo Práctico 1: \texttt{pthreads}}
 \integrante{Budiño, Gabriel Fabricio}{046/16}{gabriel.f.budi@gmail.com} % obligatorio 
 \integrante{Garro, Damián Eugenio}{354/16}{damian.garro.mst@gmail.com} % obligatorio 
-\integrante{Rozenberg, Uriel Jonathan}{838/12}{rozenberguriel@gmail.com} % obligatorio 
+\integrante{Rozenberg, Uriel Jonathan    \includegraphics[height=0.4cm]{img/barba.png}}{838/12}{rozenberguriel@gmail.com} % obligatorio 
 
 \maketitle
 
@@ -280,7 +280,7 @@ Para este ejercicio había que repetir la funcionalidad del anterior usando la ve
 \SetKwProg{Fn}{Función}{}{fin}
 
 \SetAlgoLined
-\Fn{maximum2(p\_archivosn, p\_maximos, archs)}{
+\Fn{maximum2(p\_archivos, p\_maximos, archs)}{
 	\texttt{mapa} $\leftarrow$ \texttt{count\_words(p\_archivos, archs)} \\
 	devolver \texttt{mapa.maximum(p\_maximos)} \\
 }
@@ -290,6 +290,62 @@ Para este ejercicio había que repetir la funcionalidad del anterior usando la ve
 En este ejercicio se pide además hacer una comparación con la implementación del ejercicio 5. La experimentación de esto se presenta en la siguiente sección.
 
 \section{Experimentación}
+
+Para comparar el rendimiento de la implementación del ejercicio 5 y el ejercicio 6 decidimos medir el tiempo en nanosegundos que toma ejecutar las funciones, para distintas cantidades de \textit{threads}. Sin embargo, ya que en ambas implementaciones tomar el máximo sobre el \texttt{CHM} \texttt{mapa} es exactamente igual (\texttt{mapa.maximum(p\_maximos)}), solo medimos el tiempo hasta que se termina de armar \texttt{mapa}. Viendo el pseudocódigo de cada ejercicio, lo que tomamos es el tiempo de ejecutar todas las líneas menos la última. Nos referiremos a este tiempo como \textit{ej5} y \textit{ej6} respectivamente.
+
+Las mediciones fueron realizadas en una computadora con las siguientes especificaciones:
+\begin{itemize}
+\itemsep0em
+\item Procesador: Intel(R) Core(TM) i5-4460  CPU @ 3.20GHz x 4
+\item Memoria: 8 GB DDR3
+\item S.O.: Ubuntu 17.10 64 bits
+\end{itemize}
+
+Como primer experimento lo que hicimos fue armar 100 copias de un mismo archivo de 500 palabras, el cual generamos tomándolas aleatoriamente de un archivo de 10000 palabras en inglés. El archivo se genera sin palabras repetidas, pero al tener 100 copias del mismo en total cada palabra se repite 100 veces. A partir de esto ejecutamos \texttt{maximum} y \texttt{maximum2} con esta lista de 100 archivos iguales, pasando como parámetro \texttt{p\_archivos} de 1 a 100 para ver cómo influye la cantidad de \textit{threads}, y en cambio \texttt{p\_maximos} lo pusimos en una cantidad cualquiera ya que no influye en la medición que realizamos. Este proceso lo realizamos con 300 repeticiones.
+
+Lo que esperamos es que \textit{ej5} en general sea mayor que \textit{ej6}, ya que el tener que hacer un merge de todos los \texttt{CHM} supone un cuello de botella que se realiza sin paralelismo. Además, creemos que incrementar \texttt{p\_archivos} solo dará mejoras sustanciales en los primeros valores y hay un punto en el que agregar muchos \textit{threads} no sirve tanto.
+
+\begin{center}
+   \includegraphics[height=5.85cm]{img/exp1.png}
+   \captionof{figure}{Tiempo de ejecución promedio de \textit{ej5} y \textit{ej6} según \texttt{p\_archivos} con 100 archivos iguales}
+   \label{fig:exp1}
+\end{center}
+
+Los resultados los presentamos graficados en la \textbf{Figura \ref{fig:exp1}}, y lo que podemos ver es que como esperábamos \textit{ej5} es mucho mayor que \textit{ej6}. También vemos que, salvo en los primeros valores, en \textit{ej5} hay un crecimiento del tiempo conforme \texttt{p\_archivos} aumenta. 
+
+En \textit{ej6} esto no pasa, y además observamos que, tal cual habíamos predicho, el tiempo se reduce de forma importante en los primeros valores de \texttt{p\_archivos} (reduciendo a aproximadamente la mitad el tiempo donde solo hay 1 \textit{thread}), pero después este efecto desaparece, seguir agregando \textit{threads} no sirve para bajar el tiempo. Por esto creemos que en una implementación con paralelismo es necesario llevar a cabo una experimentación para determinar una cantidad de \textit{threads} óptima. 
+
+Otra observación que podemos realizar es que en \textit{ej6} hay un pico en \texttt{p\_archivos = 62}. Nos fuimos capaces de determinar la causa de esta anomalía, creímos que podría tratarse algo específico de la computadora en donde realizamos las mediciones, pero probando en otras obteníamos el mismo resultado patológico.
+
+Para estudiar más en detalle, decidimos separar la medición de \textit{ej5} en dos. Por un lado tomamos el tiempo que se tarda en armar los \texttt{p\_archivos} \texttt{CHM} indivuales y por otro lado medimos el tiempo de realizar el merge de todos ellos en \texttt{mapa}. Llamaremos a estos tiempos \textit{ej5-load} y \textit{ej5-merge} respectivamente.
+
+\begin{center}
+   \includegraphics[height=5.85cm]{img/exp1-lm.png}
+   \captionof{figure}{Tiempo de ejecución promedio de \textit{ej5-load}, \textit{ej5-merge} y \textit{ej6} según \texttt{p\_archivos} con 100 archivos iguales}
+   \label{fig:exp1-lm}
+\end{center}
+
+Observando los resultados en la \textbf{Figura \ref{fig:exp1-lm}}, podemos ver cómo el merge hace que el ejercicio 5 tome mucho más tiempo, lo cual era esperable. Pero también vemos otro resultado interesante: Comparando \textit{ej5-load} contra \textit{ej6} podemos decir que para los primeros valores de \texttt{p\_archivos} el primero está por debajo del otro. Esto tiene sentido porque, aunque ambas funciones realizan operaciones muy similares en esta etapa, una diferencia importante entre ellas es que en el ejercicio 5 cada \textit{thread} se ocupa de un \texttt{CHM} propio, y entonces no se encuentra con bloqueos cuando se realizan los \texttt{addAndInc}, mientras que en el ejercicio 6 esto sí ocurre ya que todos los \textit{threads} modifican un mismo \texttt{CHM}.
+
+Al aumentar \texttt{p\_archivos} la situación cambia, \textit{ej5-load} aumenta mucho llegando a superar a \textit{ej6}. Una posible explicación que encontramos es que esto se debe en la cantidad de \texttt{push\_front} realizados. En el ejercicio 5 esa función se aplica más veces porque cada \textit{thread} debe hacerlo para agregar una palabra a su \texttt{CMH}, independientemente si otro \textit{thread} ya lo había hecho en su propio \texttt{CHM}. En cambio en el ejercicio 6 cada palabra distinta se inserta solo una vez.
+
+Nuestra hipótesis entonces es que si en vez de usar 100 archivos iguales usáramos archivos distintos \textit{ej5-load} sí se mantendría por debajo de \textit{ej6}. Para poner a prueba esto realizamos un nuevo experimento, de forma que los archivos sean distintos (aunque puede haber palabras repetidas entre ellos, cada uno se genera independientemente), de nuevo con 500 palabras cada uno. Además creemos que tener archivos distintos es un escenario más realista. Tomamos 60 repeticiones de las mediciones.
+
+\begin{center}
+   \includegraphics[height=5.85cm]{img/exp2.png}
+   \includegraphics[height=5.85cm]{img/exp2-lm.png}
+   \captionof{figure}{Tiempo de ejecución promedio de \textit{ej5}, \textit{ej5-load}, \textit{ej5-merge} y \textit{ej6} según \texttt{p\_archivos} con 100 archivos distintos}
+   \label{fig:exp2}
+\end{center}
+
+La \textbf{Figura \ref{fig:exp2}} tiene graficados los tiempos medidos, a la izquierda con \textit{ej5} y a la derecha separándolo en \textit{ej5-load} y \textit{ej5-merge}. Comparando los resultados del experimento con 100 archivos iguales contra el de ahora vemos una diferencia muy distinguida entre los tiempos. En el primer caso los tiempos están en órdenes de 1e7, mientras que ahora son del orden de 1e8. Lo que ocurre es que cuando hay 100 archivos iguales solo hay en total 500 palabras distintas entre todos, pero cuando los archivos son distintos pueden haber muchas más claves diferentes. Esto hace que ahorra los \texttt{CHM} generados tengan un tamaño considerablemente mayor, lo cual hace que operaciones como \texttt{addAndInc} y el proceso de merge tomen bastante más tiempo.
+
+
+Ahora, analizando las diferencias entre las dos implementaciones, vemos que ocurre lo que esperábamos, \textit{ej5-load} es siempre menor a \textit{ej6}. En este caso los bloqueos no son el único factor, también hay que tener en cuenta que ahora los \texttt{CHM} individuales son más chicos que el \texttt{CHM} global, tienen menos claves porque solo contienen las de los archivos que revisan, mientras que todos los archivos en su totalidad tienen más palabras distintas, por lo que el \texttt{CHM} global que se crea en el ejercicio 6 es más grande y sus entradas toman más tiempo en recorrer cuando se hace \texttt{addAndInc}.
+
+Sin embargo, a pesar de que cargar los archivos en distintos \texttt{CHM} es más rápido que hacerlo en uno solo (incluso vemos una mejora de la mitad de tiempo), vemos nuevamente que hacer un merge de todos toma una cantidad muy grande de tiempo, haciendo que lo que se había ganado en la paralelización del trabajo se pierda por completo. Es por esto que nuestra conclusión es que la mejor experimentación es la del ejercicio 6.
+
+
 
 \newpage
 \includepdf[scale=0.75,pages=1,pagecommand=\section{Apéndices}
