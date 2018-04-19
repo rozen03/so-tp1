@@ -9,29 +9,24 @@ LDLIBS = -lpthread -lrt
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
-BIN = test-2 test-3 test-5
-OBJ = ConcurrentHashMap.o
+BIN = test-2 test-3 test-5 exp/exp mitest
 
 all: $(BIN)
 
-$(BIN): ListaAtomica.hpp
-mitest: ListaAtomica.hpp ConcurrentHashMap.hpp test.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -g -o $@ test.cpp  $(LDLIBS)
+$(BIN): ListaAtomica.hpp ConcurrentHashMap.hpp
+mitest: test.cpp
+	# $(CXX) $(CXXFLAGS) $(LDFLAGS) -g -o $@ test.cpp  $(LDLIBS)
 
-#no se si lo de -nostartfiles esta bien, pero al menos asi compiló lpm!
-ConcurrentHashMap.o: ListaAtomica.hpp ConcurrentHashMap.hpp
-	$(CXX) $(CXXFLAGS)  -nostartfiles $(LDFLAGS) -o $@ $^  $(LDLIBS)
-
-test-2: $(OBJ) test-2.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-2.cpp $(OBJ) $(LDLIBS)
+test-2: test-2.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-2.cpp $(LDLIBS)
 
 test-2-run: test-2
 	awk -f corpus.awk corpus | sort >corpus-post
 	./test-2 | sort | diff -u - corpus-post
 	rm -f corpus-post
 
-test-3: $(OBJ) test-3.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-3.cpp $(OBJ) $(LDLIBS)
+test-3:  test-3.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-3.cpp $(LDLIBS)
 
 test-3-run: test-3
 	awk -f corpus.awk corpus | sort >corpus-post
@@ -39,8 +34,8 @@ test-3-run: test-3
 	for i in 0 1 2 3 4; do ./test-3 $$((i + 1)) | sort | diff -u - corpus-post; done
 	rm -f corpus-post corpus-[0-4]
 
-test-5: $(OBJ) test-5.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-5.cpp $(OBJ) $(LDLIBS)
+test-5: test-5.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-5.cpp $(LDLIBS)
 
 test-5-run: test-5
 	awk -f corpus.awk corpus | sort -nk 2 | tail -n 1 >corpus-max
@@ -51,11 +46,9 @@ test-5-run: test-5
 	done; done
 	rm -f corpus-max corpus-[0-4]
 
-exp: $(OBJ) exp/exp.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o exp/$@ exp/exp.cpp $(OBJ) $(LDLIBS)
+exp: exp/exp.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o exp/$@ exp/exp.cpp $(LDLIBS)
 
 clean:
-	rm -f $(BIN) $(OBJ)
+	rm -f $(BIN)
 	rm -f corpus-*
-	rm -f mitest
-	rm -f exp/exp
