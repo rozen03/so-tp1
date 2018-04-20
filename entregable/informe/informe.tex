@@ -58,13 +58,13 @@
 \section{Introducción}
 Para este trabajo se debía implementar la clase ConcurrentHashMap, una tabla de $hash$ abierta con interfaz de Map (i.e, diccionario) preparada para ser usada por $threads$ concurrentes. 
 
-Se presenta en este informe un breve resumen de la resolución de cada ejercicio y la experimentación y pruebas realizadas. En el Apéndice A se encuentra el enunciado del trabajo.
+Se presenta en este informe un breve resumen de la resolución de cada ejercicio y la experimentación y pruebas realizadas. En el Apéndice A se encuentra el enunciado del trabajo, y en el apéndice B se encuentran aclaraciones sobre decisiones tomadas a causa de no poder compilar los tests y al mismo tiempo cumplir con lo que pide el enunciado. 
 
 
 \section{Resolución}
 \subsection{Ejercicio 1}
 
-El primer paso era completar la clase \texttt{ListaAtomica} entregada por la cátedra implementando \texttt{push\_front} de manera que sea \textit{atómica} y no haya peligro de $race$ $conditions$. 
+El primer paso era completar la clase \texttt{Lista} entregada por la cátedra implementando \texttt{push\_front} de manera que sea \textit{atómica} y no haya peligro de $race$ $conditions$. 
 
 Para esta operación se crea un nuevo nodo con el valor pasado a como parámetro, \texttt{nuevo}, y se hace que apunte como siguiente al actual primer nodo, \texttt{head}. Acá faltaría solo asignar \texttt{nuevo} a \texttt{head} de modo que éste sea el actual primer nodo, pero podría pasar que entre la asignación de \texttt{nuevo$\rightarrow$next} y este último paso alguien más haga un \texttt{push\_front}, no cumpliendo así la condición de que no haya peligro de $race$ $conditions$. Para resolver esto, se realiza esa asignación de la siguiente manera:
 
@@ -346,10 +346,16 @@ Ahora, analizando las diferencias entre las dos implementaciones, vemos que ocur
 Sin embargo, a pesar de que cargar los archivos en distintos \texttt{CHM} es más rápido que hacerlo en uno solo (incluso vemos una mejora de la mitad de tiempo), vemos nuevamente que hacer un merge de todos toma una cantidad muy grande de tiempo, haciendo que lo que se había ganado en la paralelización del trabajo se pierda por completo. Es por esto que nuestra conclusión es que la mejor experimentación es la del ejercicio 6.
 
 
-
 \newpage
 \includepdf[scale=0.75,pages=1,pagecommand=\section{Apéndices}
 \subsection{Apéndice A - Enunciado}]{./../../tp2-enunciado.pdf}
 \includepdf[scale=0.75,pages=2-,pagecommand=]{./../../tp2-enunciado.pdf}
+
+\section{Apéndice B}
+
+A la clase \texttt{ConcurrentHashMap} le agregamos un constructor por copia y un operador de asignación, lo cual no era requerido por el enunciado necesitamos para lograr compilar los tests. A causa de esto, tuvimos que implementar también un constructor por copia para la clase \texttt{Lista}.
+
+Las funciones requeridas en los ejercicio 2 a 6 las definimos dentro de la clase \texttt{ConcurrentHashMap} como \texttt{static} nuevamente para lograr compilar los tests. En este caso, el enunciado pide explícitamente que no lo hagamos de esta forma, pero los tests así lo asumían.
+
 \end{document}
 
