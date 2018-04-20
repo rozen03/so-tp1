@@ -343,7 +343,7 @@ La \textbf{Figura \ref{fig:exp2}} tiene graficados los tiempos medidos, a la izq
 
 Ahora, analizando las diferencias entre las dos implementaciones, vemos que ocurre lo que esperábamos, \textit{ej5-load} es siempre menor a \textit{ej6}. En este caso los bloqueos no son el único factor, también hay que tener en cuenta que ahora los \texttt{CHM} individuales son más chicos que el \texttt{CHM} global, tienen menos claves porque solo contienen las de los archivos que revisan, mientras que todos los archivos en su totalidad tienen más palabras distintas, por lo que el \texttt{CHM} global que se crea en el ejercicio 6 es más grande y sus entradas toman más tiempo en recorrer cuando se hace \texttt{addAndInc}.
 
-Sin embargo, a pesar de que cargar los archivos en distintos \texttt{CHM} es más rápido que hacerlo en uno solo (incluso vemos una mejora de la mitad de tiempo), vemos nuevamente que hacer un merge de todos toma una cantidad muy grande de tiempo, haciendo que lo que se había ganado en la paralelización del trabajo se pierda por completo. Es por esto que nuestra conclusión es que la mejor experimentación es la del ejercicio 6.
+Sin embargo, a pesar de que cargar los archivos en distintos \texttt{CHM} es más rápido que hacerlo en uno solo (incluso vemos una mejora de la mitad de tiempo), vemos nuevamente que hacer un merge de todos toma una cantidad muy grande de tiempo, haciendo que lo que se había ganado en la paralelización del trabajo se pierda por completo. Es por esto que nuestra conclusión es que la mejor implementación es la del ejercicio 6.
 
 
 \newpage
