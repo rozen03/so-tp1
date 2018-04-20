@@ -11,7 +11,7 @@
 #include <list>
 #include <time.h>
 
-#define  EXP
+//#define  EXP
 
 using namespace std;
 
