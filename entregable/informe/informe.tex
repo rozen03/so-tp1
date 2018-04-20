@@ -58,7 +58,7 @@
 \section{Introducción}
 Para este trabajo se debía implementar la clase ConcurrentHashMap, una tabla de $hash$ abierta con interfaz de Map (i.e, diccionario) preparada para ser usada por $threads$ concurrentes. 
 
-Se presenta en este informe un breve resumen de la resolución de cada ejercicio y la experimentación y pruebas realizadas. En el Apéndice A se encuentra el enunciado del trabajo, y en el apéndice B se encuentran aclaraciones sobre decisiones tomadas a causa de no poder compilar los tests y al mismo tiempo cumplir con lo que pide el enunciado. 
+Se presenta en este informe un breve resumen de la resolución de cada ejercicio y la experimentación y pruebas realizadas. En el Apéndice A se encuentra el enunciado del trabajo, y en el Apéndice B se encuentran aclaraciones sobre decisiones tomadas a causa de no poder compilar los tests y al mismo tiempo cumplir con lo que pide el enunciado. 
 
 
 \section{Resolución}
@@ -351,11 +351,11 @@ Sin embargo, a pesar de que cargar los archivos en distintos \texttt{CHM} es más
 \subsection{Apéndice A - Enunciado}]{./../../tp2-enunciado.pdf}
 \includepdf[scale=0.75,pages=2-,pagecommand=]{./../../tp2-enunciado.pdf}
 
-\section{Apéndice B}
+\subsection{Apéndice B - Aclaraciones}
 
-A la clase \texttt{ConcurrentHashMap} le agregamos un constructor por copia y un operador de asignación, lo cual no era requerido por el enunciado necesitamos para lograr compilar los tests. A causa de esto, tuvimos que implementar también un constructor por copia para la clase \texttt{Lista}.
+A la clase \texttt{ConcurrentHashMap} le agregamos un constructor por copia y un operador de asignación, lo cual no era requerido por el enunciado pero lo necesitamos para lograr compilar los tests. A causa de esto, tuvimos que implementar también un constructor por copia para la clase \texttt{Lista}.
 
-Las funciones requeridas en los ejercicio 2 a 6 las definimos dentro de la clase \texttt{ConcurrentHashMap} como \texttt{static} nuevamente para lograr compilar los tests. En este caso, el enunciado pide explícitamente que no lo hagamos de esta forma, pero los tests así lo asumían.
+Las funciones requeridas en los ejercicio 2 a 6 las definimos dentro de la clase \texttt{ConcurrentHashMap} como \texttt{static}, nuevamente para lograr compilar los tests. En este caso, el enunciado pide explícitamente que no lo hagamos de esta forma, pero los tests así lo asumían.
 
 \end{document}
 
