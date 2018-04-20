@@ -5,8 +5,8 @@ import os
 from random import shuffle
 from shutil import copyfile
 
-# Experimento 1: Genero 100 archivos distntos
-# Experimento 2: Genero solo 1 archivo, pero armo una lista de 100 veces ese
+# Experimento 1: Genero solo 1 archivo, pero armo una lista de 100 veces ese
+# Experimento 2: Genero 100 archivos distntos
 
 def archivosRandom(filesCount, wordcount):
 	f = open("words.txt")
@@ -32,10 +32,10 @@ with open(filename, 'w') as f:
 for repeticion in range(repeticiones):
 	sys.stdout.flush()
 	if experimento == 1:
-		archivosRandom(100, 500)
-	else:
 		archivosRandom(1, 500)
 		copiarArchivo(100)
+	else:
+		archivosRandom(100, 500)
 	sys.stdout.write("\rRepetición " + str(repeticion+1) + "/" + str(repeticiones))
 	os.system("./exp 2>>" + filename)
 
