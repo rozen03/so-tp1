@@ -329,7 +329,7 @@ Observando los resultados en la \textbf{Figura \ref{fig:exp1-lm}}, podemos ver c
 
 Al aumentar \texttt{p\_archivos} la situación cambia, \textit{ej5-load} aumenta mucho llegando a superar a \textit{ej6}. Una posible explicación que encontramos es que esto se debe en la cantidad de \texttt{push\_front} realizados. En el ejercicio 5 esa función se aplica más veces porque cada \textit{thread} debe hacerlo para agregar una palabra a su \texttt{CMH}, independientemente si otro \textit{thread} ya lo había hecho en su propio \texttt{CHM}. En cambio en el ejercicio 6 cada palabra distinta se inserta solo una vez.
 
-Nuestra hipótesis entonces es que si en vez de usar 100 archivos iguales usáramos archivos distintos \textit{ej5-load} sí se mantendría por debajo de \textit{ej6}. Para poner a prueba esto realizamos un nuevo experimento, de forma que los archivos sean distintos (aunque puede haber palabras repetidas entre ellos, cada uno se genera independientemente), de nuevo con 500 palabras cada uno. Además creemos que tener archivos distintos es un escenario más realista. Tomamos 60 repeticiones de las mediciones.
+Nuestra hipótesis entonces es que si en vez de usar 100 archivos iguales usáramos archivos distintos \textit{ej5-load} sí se mantendría por debajo de \textit{ej6}. Para poner a prueba esto realizamos un nuevo experimento, de forma que los archivos sean distintos (aunque puede haber palabras repetidas entre ellos, cada uno se genera independientemente), de nuevo con 500 palabras cada uno. Además creemos que tener archivos distintos es un escenario más realista. Tomamos 300 repeticiones de las mediciones.
 
 \begin{center}
    \includegraphics[height=5.85cm]{img/exp2.png}
