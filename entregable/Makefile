@@ -14,8 +14,6 @@ BIN = test-2 test-3 test-5 exp/exp mitest
 all: $(BIN)
 
 $(BIN): ListaAtomica.hpp ConcurrentHashMap.hpp
-mitest: test.cpp
-	# $(CXX) $(CXXFLAGS) $(LDFLAGS) -g -o $@ test.cpp  $(LDLIBS)
 
 test-2: test-2.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-2.cpp $(LDLIBS)
@@ -48,6 +46,9 @@ test-5-run: test-5
 
 exp/exp: exp/exp.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ exp/exp.cpp $(LDLIBS)
+
+mitest: mitest.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ mitest.cpp  $(LDLIBS)
 
 clean:
 	rm -f $(BIN)
